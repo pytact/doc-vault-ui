@@ -9,13 +9,13 @@
 import React, { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { AccountSetupForm } from "../components/AccountSetupForm";
-import { useActivateAccount } from "@/hooks/useInvitations";
-import { useValidateInvitation } from "@/hooks/useInvitations";
+import { useActivateAccount } from "../hooks/useInvitations";
+import { useValidateInvitation } from "../hooks/useInvitations";
 import { useNotificationContext } from "@/contexts/notification.context";
 import { InviteActivationValidate } from "../components/InviteActivationValidate";
 import { InviteExpired } from "../components/InviteExpired";
 import { authRoutes } from "@/utils/routing";
-import type { AccountSetupFormSchema } from "@/hooks/useAccountSetupForm";
+import type { AccountSetupFormSchema } from "../hooks/useAccountSetupForm";
 
 /**
  * Account setup container component
@@ -44,18 +44,21 @@ export function AccountSetupContainer() {
   const handleSubmit = async (data: AccountSetupFormSchema) => {
     try {
       await activateMutation.mutateAsync({
-        invite_token: token,
+        token: token,
         name: data.name,
         password: data.password,
       });
 
       addNotification({
         type: "success",
-        message: "Account activated successfully",
+        message: "Account activated successfully. Please log in to continue.",
         title: "Welcome!",
       });
 
-      router.push(authRoutes.login);
+      // Redirect to login after a short delay to show the notification
+      setTimeout(() => {
+        router.replace(authRoutes.login);
+      }, 500);
     } catch (error) {
       const errorMessage =
         error instanceof Error

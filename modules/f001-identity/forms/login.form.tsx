@@ -82,19 +82,31 @@ export const LoginForm = React.memo(function LoginForm({
   );
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-50 px-4 py-12">
       <div className="w-full max-w-md">
-        <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
-          <CardHeader className="text-center pb-6 pt-8">
+        <Card variant="elevated" className="shadow-2xl border-0">
+          <CardHeader className="text-center pb-6 pt-8 bg-gradient-to-r from-primary-600 to-primary-700 text-white border-0">
             <div className="mb-4 flex justify-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-100">
-                <UserIcon />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30">
+                <svg
+                  className="h-8 w-8 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  />
+                </svg>
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight text-white">
               Welcome Back
             </h1>
-          <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-primary-100">
               Sign in to your account to continue
           </p>
         </CardHeader>
@@ -127,6 +139,9 @@ export const LoginForm = React.memo(function LoginForm({
                         autoComplete="email"
                         error={fieldState.error?.message}
                         className="h-11 transition-all duration-200"
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          field.onChange(e.target.value);
+                        }}
                       />
                     </FormControl>
                   </FormItem>
@@ -150,6 +165,9 @@ export const LoginForm = React.memo(function LoginForm({
                         autoComplete="current-password"
                         error={fieldState.error?.message}
                         className="h-11 transition-all duration-200"
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          field.onChange(e.target.value);
+                        }}
                       />
                     </FormControl>
                   </FormItem>
@@ -173,8 +191,8 @@ export const LoginForm = React.memo(function LoginForm({
           </Form>
         </CardBody>
 
-          <CardFooter className="px-8 pb-8 pt-0 border-t border-gray-100">
-            <p className="text-center text-xs text-gray-500 w-full">
+          <CardFooter className="px-8 pb-8 pt-0 border-t border-border bg-background-secondary">
+            <p className="text-center text-xs text-text-secondary w-full">
               By signing in, you agree to our Terms of Service and Privacy Policy
             </p>
           </CardFooter>

@@ -20,8 +20,6 @@ export interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
  */
 export function Table({
   children,
-  striped = false,
-  hover = false,
   className,
   ...props
 }: TableProps) {

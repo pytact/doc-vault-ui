@@ -5,7 +5,7 @@
 
 import { httpClient as http } from "@/lib/http";
 import { normalizeAPIError } from "@/core/http/normalizers/error-normalizer";
-import { RoleListResponse } from "@/types/responses/role.responses";
+import { RoleListResponse } from "@/modules/f001-identity/types/responses/role";
 
 const basePath = "/v1/roles";
 

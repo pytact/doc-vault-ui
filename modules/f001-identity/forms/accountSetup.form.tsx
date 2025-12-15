@@ -21,13 +21,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
-import { usePasswordValidation } from "@/hooks/usePasswordValidation";
+import { usePasswordValidation } from "../hooks/usePasswordValidation";
 import {
   createAccountSetupSchema,
   accountSetupDefaultValues,
   type AccountSetupFormSchema,
 } from "./accountSetup.schema";
-import type { PasswordRules } from "@/types/responses/common.responses";
+import type { PasswordRules } from "@/types/responses/common";
 
 interface AccountSetupFormProps {
   onSubmit: (values: AccountSetupFormSchema) => Promise<void>;
@@ -232,5 +232,5 @@ export const AccountSetupForm = React.memo(function AccountSetupForm({
       </Card>
     </div>
   );
-}
+});
 

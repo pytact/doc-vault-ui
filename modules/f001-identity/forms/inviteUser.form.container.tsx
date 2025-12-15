@@ -19,6 +19,7 @@ import { useInviteUserFormSubmit } from "./useInviteUserFormSubmit";
 import { useNotificationContext } from "@/contexts/notification.context";
 import { mapApiErrorsToForm } from "./utils/errorMapper";
 import { useModalState } from "@/hooks/useModalState";
+import { useRoleList } from "@/hooks/useRoles";
 
 interface InviteUserFormContainerProps {
   onSuccess?: () => void;
@@ -35,6 +36,7 @@ export function InviteUserFormContainer({
 }: InviteUserFormContainerProps) {
   const { addNotification } = useNotificationContext();
   const { submit, isLoading, error } = useInviteUserFormSubmit();
+  const { data: rolesData } = useRoleList();
 
   const form = useForm<InviteUserFormSchema>({
     resolver: zodResolver(InviteUserSchema),
@@ -51,6 +53,8 @@ export function InviteUserFormContainer({
 
   const handleSubmit = async (values: InviteUserFormSchema) => {
     try {
+      console.log("InviteUserFormContainer - Submitting invite with values:", values);
+      console.log("InviteUserFormContainer - Role ID:", values.role_id);
       await submit(values);
       addNotification({
         type: "success",
@@ -72,11 +76,14 @@ export function InviteUserFormContainer({
     }
   };
 
+  const availableRoles = rolesData?.data?.items || [];
+
   return (
     <InviteUserForm
       onSubmit={handleSubmit}
       onCancel={onCancel}
       isLoading={isLoading}
+      availableRoles={availableRoles}
     />
   );
 }

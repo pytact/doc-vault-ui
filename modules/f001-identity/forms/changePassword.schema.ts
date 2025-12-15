@@ -5,7 +5,7 @@
  */
 
 import { z } from "zod";
-import type { PasswordRules } from "@/types/responses/common.responses";
+import type { PasswordRules } from "@/types/responses/common";
 
 /**
  * Create schema with dynamic password rules

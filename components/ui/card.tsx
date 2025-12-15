@@ -30,9 +30,9 @@ export function Card({
   ...props
 }: CardProps) {
   const variants = {
-    default: "bg-white border border-gray-200 shadow-sm",
-    outlined: "bg-transparent border-2 border-gray-300",
-    elevated: "bg-white shadow-xl border border-gray-100",
+    default: "bg-white border border-border shadow-sm",
+    outlined: "bg-transparent border-2 border-primary-300",
+    elevated: "bg-white shadow-lg border border-border",
   };
 
   return (
@@ -59,7 +59,7 @@ export function CardHeader({
 }: CardHeaderProps) {
   return (
     <div
-      className={cn("px-6 py-4 border-b border-gray-200", className)}
+      className={cn("px-6 py-4 border-b border-border bg-gradient-to-r from-primary-50 to-white", className)}
       {...props}
     >
       {children}
@@ -95,7 +95,7 @@ export function CardFooter({
 }: CardFooterProps) {
   return (
     <div
-      className={cn("px-6 py-4 border-t border-gray-200", className)}
+      className={cn("px-6 py-4 border-t border-border", className)}
       {...props}
     >
       {children}

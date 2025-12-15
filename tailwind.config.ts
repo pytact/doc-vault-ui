@@ -9,12 +9,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Design tokens will be imported from theme/tokens/colors.ts
+        // Blue + White Theme
         primary: {
+          50: '#EFF6FF',
+          100: '#DBEAFE',
+          200: '#BFDBFE',
+          300: '#93C5FD',
+          400: '#60A5FA',
+          500: '#3B82F6',
+          600: '#2563EB',
+          700: '#1D4ED8',
+          800: '#1E40AF',
+          900: '#1E3A8A',
           DEFAULT: '#2563EB',
-          hover: '#1E40AF',
-          light: '#3B82F6',
-          dark: '#1E3A8A',
+          hover: '#1D4ED8',
+          light: '#60A5FA',
+          dark: '#1E40AF',
         },
         secondary: {
           DEFAULT: '#64748B',
@@ -42,17 +52,24 @@ const config: Config = {
         },
         background: {
           DEFAULT: '#FFFFFF',
+          secondary: '#F8FAFC',
+          tertiary: '#F1F5F9',
           dark: '#0F172A',
         },
         text: {
-          DEFAULT: '#0F172A',
-          secondary: '#64748B',
-          muted: '#94A3B8',
-          dark: '#F8FAFC',
+          DEFAULT: '#1E293B',
+          secondary: '#475569',
+          muted: '#64748B',
+          light: '#94A3B8',
+          dark: '#FFFFFF',
         },
         border: {
           DEFAULT: '#E2E8F0',
-          dark: '#334155',
+          light: '#F1F5F9',
+          dark: '#CBD5E1',
+        },
+        foreground: {
+          DEFAULT: '#1E293B',
         },
       },
       spacing: {

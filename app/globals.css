@@ -1,19 +1,43 @@
 /**
  * Global Styles
  * Tailwind CSS imports and global styles
+ * Blue + White Theme
  */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
 :root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
+    --background: 255 255 255;
+    --foreground: 30 41 59;
+    --primary: 37 99 235;
+    --primary-foreground: 255 255 255;
+    --secondary: 100 116 139;
+    --secondary-foreground: 255 255 255;
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
+    --accent: 239 246 255;
+    --accent-foreground: 30 41 59;
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 37 99 235;
+  }
+
+  * {
+    @apply border-border;
 }
 
 body {
-  color: rgb(var(--foreground));
-  background: rgb(var(--background));
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }
 

@@ -25,7 +25,10 @@ export const invitationRoutes = {
  */
 export const userRoutes = {
   list: "/family/users",
+  listAll: "/superadmin/users", // SuperAdmin view all users
+  listForFamily: (familyId: string) => `/families/${familyId}/users`,
   detail: (userId: string) => `/family/users/${userId}`,
+  detailForFamily: (familyId: string, userId: string) => `/families/${familyId}/users/${userId}`,
 };
 
 /**
@@ -43,7 +46,7 @@ export const familyRoutes = {
  * Profile routes
  */
 export const profileRoutes = {
-  settings: "/profile/settings",
+  settings: "/settings/profile",
 };
 
 /**
@@ -52,6 +55,18 @@ export const profileRoutes = {
 export const dashboardRoutes = {
   home: "/dashboard",
   superAdmin: "/superadmin/dashboard",
+};
+
+/**
+ * Taxonomy (Categories & Subcategories) routes
+ * F-002: Read-only taxonomy routes
+ * All authenticated users can view taxonomy
+ */
+export const taxonomyRoutes = {
+  list: "/categories",
+  create: "/categories/create",
+  detail: (categoryId: string) => `/categories/${categoryId}`,
+  edit: (categoryId: string) => `/categories/${categoryId}/edit`,
 };
 
 /**

@@ -10,6 +10,7 @@ import { RouteGuard } from "@/core/guards/route-guard";
 import { FamilyFormContainer } from "@/modules/f001-identity/forms/family.form.container";
 import { useRouter } from "next/navigation";
 import { familyRoutes } from "@/utils/routing";
+import { UserRole } from "@/modules/f001-identity/types/responses/auth";
 
 export default function CreateFamilyPage() {
   const router = useRouter();
@@ -25,10 +26,15 @@ export default function CreateFamilyPage() {
   return (
     <RouteGuard
       requireAuth={true}
-      requiredRoles={["superadmin"]}
+      roles={[UserRole.SuperAdmin]}
     >
-      <div className="container mx-auto py-8">
-        <h1 className="text-2xl font-bold mb-6">Create Family</h1>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Create Family</h1>
+          <p className="mt-2 text-slate-600">
+            Create a new family to organize users and documents
+          </p>
+        </div>
         <FamilyFormContainer
           onSuccess={handleSuccess}
           onCancel={handleCancel}

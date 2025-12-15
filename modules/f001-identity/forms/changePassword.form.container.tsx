@@ -16,7 +16,7 @@ import {
   type ChangePasswordFormSchema,
 } from "./changePassword.schema";
 import { useChangePasswordFormSubmit } from "./useChangePasswordFormSubmit";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile } from "../hooks/useProfile";
 import { useNotificationContext } from "@/contexts/notification.context";
 import { mapApiErrorsToForm } from "./utils/errorMapper";
 
@@ -37,7 +37,7 @@ export function ChangePasswordFormContainer({
   const { data: profileData } = useProfile();
   const { submit, isLoading, error } = useChangePasswordFormSubmit();
 
-  const schema = createChangePasswordSchema(profileData?.data?.password_rules || undefined);
+  const schema = createChangePasswordSchema(profileData?.data?.data?.password_rules || undefined);
   const form = useForm<ChangePasswordFormSchema>({
     resolver: zodResolver(schema),
     defaultValues: changePasswordDefaultValues,
@@ -80,7 +80,7 @@ export function ChangePasswordFormContainer({
       onCancel={onCancel}
       isLoading={isLoading}
       error={error?.message || null}
-      passwordRules={profileData?.data?.password_rules || undefined}
+      passwordRules={profileData?.data?.data?.password_rules || undefined}
     />
   );
 }

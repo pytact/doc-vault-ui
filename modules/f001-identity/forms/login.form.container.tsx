@@ -16,7 +16,7 @@ import { useLoginFormSubmit } from "./useLoginFormSubmit";
 import { useAuthContext } from "@/contexts/auth.context";
 import { useNotificationContext } from "@/contexts/notification.context";
 import { mapApiErrorsToForm } from "./utils/errorMapper";
-import { dashboardRoutes } from "@/utils/routing";
+import { getRoleBasedDashboardRoute } from "@/utils/routing";
 
 /**
  * Login form container component
@@ -37,20 +37,37 @@ export function LoginFormContainer() {
   // Map API errors to form fields
   useEffect(() => {
     if (error) {
-      mapApiErrorsToForm(error, form.setError);
+      // Check if error is APIErrorResponse format
+      const apiError = error && typeof error === 'object' && 'error' in error
+        ? (error as any)
+        : null;
+      if (apiError) {
+        mapApiErrorsToForm(apiError, form.setError);
+      }
     }
   }, [error, form.setError]);
 
   const handleSubmit = async (values: LoginFormSchema) => {
     try {
       await submit(values);
-      await login(values.email, values.password);
+      const response = await login(values.email, values.password);
       addNotification({
         type: "success",
         message: "Login successful",
         title: "Welcome back!",
       });
-      router.push(dashboardRoutes.home);
+      
+      // Redirect to role-based dashboard using the logged-in user's role from response
+      const loggedInUser = response?.data?.user;
+      if (loggedInUser?.role) {
+        const dashboardRoute = getRoleBasedDashboardRoute(loggedInUser.role);
+        console.log("Login successful - Redirecting to:", dashboardRoute, "for role:", loggedInUser.role);
+        router.push(dashboardRoute);
+      } else {
+        // Fallback to default dashboard
+        console.warn("No role found in user data, redirecting to default dashboard");
+        router.push("/dashboard");
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error

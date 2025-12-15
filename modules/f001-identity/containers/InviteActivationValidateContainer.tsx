@@ -8,7 +8,7 @@
 
 import React, { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useValidateInvitation } from "@/hooks/useInvitations";
+import { useValidateInvitation } from "../hooks/useInvitations";
 import { InviteActivationValidate } from "../components/InviteActivationValidate";
 import { InviteExpired } from "../components/InviteExpired";
 
@@ -21,7 +21,15 @@ export function InviteActivationValidateContainer() {
   const params = useParams();
   const token = params?.token as string;
 
-  const { data: validationData, isLoading } = useValidateInvitation(token);
+  const { data: validationData, isLoading, error, isError } = useValidateInvitation(token);
+
+  // Log for debugging
+  React.useEffect(() => {
+    console.log("InviteActivationValidateContainer - Token:", token);
+    console.log("InviteActivationValidateContainer - Loading:", isLoading);
+    console.log("InviteActivationValidateContainer - Error:", error);
+    console.log("InviteActivationValidateContainer - Data:", validationData);
+  }, [token, isLoading, error, validationData]);
 
   useEffect(() => {
     if (!isLoading && validationData?.data) {
@@ -35,8 +43,22 @@ export function InviteActivationValidateContainer() {
     }
   }, [validationData, isLoading, token, router]);
 
+  // Handle error state
+  if (isError && !isLoading) {
+    console.error("InviteActivationValidateContainer - Validation error:", error);
+    // Redirect to expired page on error
+    router.replace(`/invite/${token}/expired`);
+    return <InviteActivationValidate />;
+  }
+
   if (!isLoading && validationData?.data && (!validationData.data.is_token_valid || validationData.data.is_token_expired)) {
-    return <InviteExpired expiredReason={validationData.data.expired_reason || undefined} />;
+    const expiredReason = validationData.data.expired_reason as
+      | "expired"
+      | "invalid"
+      | "family_soft_deleted"
+      | "user_soft_deleted"
+      | undefined;
+    return <InviteExpired expiredReason={expiredReason} />;
   }
 
   return <InviteActivationValidate />;

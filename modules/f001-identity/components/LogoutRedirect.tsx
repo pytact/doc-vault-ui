@@ -8,7 +8,7 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useLogout } from "@/hooks/useAuth";
+import { useLogout } from "../hooks/useAuth";
 import { useAuthContext } from "@/contexts/auth.context";
 import { InviteActivationValidate } from "./InviteActivationValidate";
 import { authRoutes } from "@/utils/routing";

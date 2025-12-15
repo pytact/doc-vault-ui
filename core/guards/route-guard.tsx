@@ -9,7 +9,7 @@
 import React, { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthContext } from "@/contexts/auth.context";
-import { UserRole } from "@/types/responses/auth.responses";
+import { UserRole } from "@/modules/f001-identity/types/responses/auth";
 import { authRoutes } from "@/utils/routing";
 
 interface RouteGuardProps {

@@ -40,6 +40,7 @@ export const ProfileForm = React.memo(function ProfileForm({
   initialName,
   email,
   onSubmit,
+  onCancel,
   isLoading = false,
   error,
   success,
@@ -111,7 +112,19 @@ export const ProfileForm = React.memo(function ProfileForm({
               />
             </div>
 
+
             <CardFooter className="px-0 pb-0">
+              <div className="flex justify-end gap-2 w-full">
+                {onCancel && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onCancel}
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </Button>
+                )}
               <Button
                 type="submit"
                 variant="primary"
@@ -120,11 +133,12 @@ export const ProfileForm = React.memo(function ProfileForm({
               >
                 Save Changes
               </Button>
+              </div>
             </CardFooter>
           </form>
         </Form>
       </CardBody>
     </Card>
   );
-}
+});
 

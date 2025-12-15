@@ -4,7 +4,7 @@
  * Based on R10 rules
  */
 
-import { useActivateAccount } from "@/hooks/useInvitations";
+import { useActivateAccount } from "../hooks/useInvitations";
 import type { AccountSetupFormSchema } from "./accountSetup.schema";
 
 /**
@@ -16,7 +16,7 @@ export function useAccountSetupFormSubmit() {
 
   async function submit(values: AccountSetupFormSchema) {
     return await activateMutation.mutateAsync({
-      invite_token: values.invite_token,
+      token: values.invite_token, // Map invite_token from form to token for API
       name: values.name,
       password: values.password,
     });

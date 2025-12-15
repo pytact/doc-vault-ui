@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
-import { useFamilyListTransform } from "@/hooks/useFamilyListTransform";
-import type { FamilyResponse } from "@/types/responses/family.responses";
+import { useFamilyListTransform } from "../hooks/useFamilyListTransform";
+import type { FamilyResponse } from "../types/responses/family";
 import Link from "next/link";
 import { familyRoutes } from "@/utils/routing";
 

@@ -85,6 +85,7 @@ export function Modal({
           sizes[size],
           className
         )}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         {(title || showCloseButton) && (

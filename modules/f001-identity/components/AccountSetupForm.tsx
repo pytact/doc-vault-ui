@@ -11,10 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
-import { useAccountSetupForm } from "@/hooks/useAccountSetupForm";
-import { usePasswordValidation } from "@/hooks/usePasswordValidation";
-import type { AccountSetupFormSchema } from "@/hooks/useAccountSetupForm";
-import type { PasswordRules } from "@/types/responses/common.responses";
+import { useAccountSetupForm } from "../hooks/useAccountSetupForm";
+import { usePasswordValidation } from "../hooks/usePasswordValidation";
+import type { AccountSetupFormSchema } from "../hooks/useAccountSetupForm";
+import type { PasswordRules } from "@/types/responses/common";
 
 interface AccountSetupFormProps {
   onSubmit: (data: AccountSetupFormSchema) => Promise<void>;
@@ -140,5 +140,5 @@ export const AccountSetupForm = React.memo(function AccountSetupForm({
       </Card>
     </div>
   );
-}
+});
 

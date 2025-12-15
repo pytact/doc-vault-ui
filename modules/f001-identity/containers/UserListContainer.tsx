@@ -9,13 +9,13 @@
 import React, { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { UserList } from "../components/UserList";
-import { useUserList } from "@/hooks/useUsers";
+import { useUserList } from "../hooks/useUsers";
 import { useFamilyContext } from "@/contexts/family.context";
-import { useUserPermissions } from "@/hooks/useUserPermissions";
+import { useUserPermissions } from "../hooks/useUserPermissions";
 import { useAuthContext } from "@/contexts/auth.context";
 import { useModalState } from "@/hooks/useModalState";
 import { InviteUserFormContainer } from "../forms/inviteUser.form.container";
-import { Modal, ModalContent, ModalHeader, ModalTitle } from "@/components/ui/modal";
+import { Modal } from "@/components/ui/modal";
 import { userRoutes } from "@/utils/routing";
 
 /**
@@ -57,16 +57,17 @@ export function UserListContainer() {
         canInviteUsers={canInviteUsers}
       />
 
-      <Modal open={isOpen} onOpenChange={close}>
-        <ModalContent>
-          <ModalHeader>
-            <ModalTitle>Invite User</ModalTitle>
-          </ModalHeader>
+      <Modal
+        isOpen={isOpen}
+        onClose={close}
+        title="Invite User"
+      >
+        <div className="p-1">
           <InviteUserFormContainer
             onSuccess={handleInviteSuccess}
             onCancel={close}
           />
-        </ModalContent>
+        </div>
       </Modal>
     </>
   );

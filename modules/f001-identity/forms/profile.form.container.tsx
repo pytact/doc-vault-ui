@@ -12,19 +12,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ProfileForm } from "./profile.form";
 import { ProfileSchema, getProfileDefaultValues, type ProfileFormSchema } from "./profile.schema";
 import { useProfileFormSubmit } from "./useProfileFormSubmit";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile } from "../hooks/useProfile";
 import { useNotificationContext } from "@/contexts/notification.context";
 import { mapApiErrorsToForm } from "./utils/errorMapper";
 
 interface ProfileFormContainerProps {
-  onChangePassword?: () => void;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 /**
  * Profile form container component
  * Handles business logic, API calls, and error mapping
  */
-export function ProfileFormContainer({ onChangePassword }: ProfileFormContainerProps) {
+export function ProfileFormContainer({ onSuccess, onCancel }: ProfileFormContainerProps) {
   const { addNotification } = useNotificationContext();
   const { data: profileData, isLoading: profileLoading } = useProfile();
   const { submit, isLoading, error } = useProfileFormSubmit();
@@ -32,14 +33,14 @@ export function ProfileFormContainer({ onChangePassword }: ProfileFormContainerP
 
   const form = useForm<ProfileFormSchema>({
     resolver: zodResolver(ProfileSchema),
-    defaultValues: getProfileDefaultValues(profileData?.data?.name),
+    defaultValues: getProfileDefaultValues(profileData?.data?.data?.name),
     mode: "onChange",
   });
 
   // Update form when profile data loads
   useEffect(() => {
-    if (profileData?.data?.name) {
-      form.reset(getProfileDefaultValues(profileData.data.name));
+    if (profileData?.data?.data?.name) {
+      form.reset(getProfileDefaultValues(profileData.data.data.name));
     }
   }, [profileData, form]);
 
@@ -60,6 +61,11 @@ export function ProfileFormContainer({ onChangePassword }: ProfileFormContainerP
         message: "Profile updated successfully",
         title: "Success",
       });
+      form.reset();
+      // Call onSuccess after a small delay to ensure notification is shown
+      setTimeout(() => {
+        onSuccess?.();
+      }, 100);
     } catch (err) {
       const errorMessage =
         err instanceof Error
@@ -78,16 +84,16 @@ export function ProfileFormContainer({ onChangePassword }: ProfileFormContainerP
     return <div>Loading profile...</div>;
   }
 
-  if (!profileData?.data) {
+  if (!profileData?.data?.data) {
     return <div>Profile not found</div>;
   }
 
   return (
     <ProfileForm
-      initialName={profileData.data.name}
-      email={profileData.data.email}
+      initialName={profileData.data.data.name}
+      email={profileData.data.data.email}
       onSubmit={handleSubmit}
-      onChangePassword={onChangePassword || (() => {})}
+      onCancel={onCancel}
       isLoading={isLoading}
       error={error?.message || null}
       success={success}

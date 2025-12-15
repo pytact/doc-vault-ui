@@ -5,7 +5,7 @@
  */
 
 import { AxiosError } from "axios";
-import { APIErrorResponse } from "@/types/responses/common.responses";
+import { APIErrorResponse } from "@/types/responses/common";
 
 /**
  * Normalizes API errors to a consistent structure

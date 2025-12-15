@@ -47,4 +47,5 @@ export {
   type FormMessageProps,
   type FormDescriptionProps,
 } from "./form";
+export { Select, type SelectProps, type SelectOption } from "./select";
 

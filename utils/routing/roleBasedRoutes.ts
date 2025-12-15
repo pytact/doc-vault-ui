@@ -4,7 +4,7 @@
  * Based on R11 routing rules
  */
 
-import { UserRole } from "@/types/responses/auth.responses";
+import { UserRole } from "@/modules/f001-identity/types/responses/auth";
 import { dashboardRoutes } from "./routes";
 
 /**

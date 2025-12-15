@@ -4,7 +4,7 @@
  * Based on R10 rules
  */
 
-import { useLogin } from "@/hooks/useAuth";
+import { useLogin } from "../hooks/useAuth";
 import type { LoginFormSchema } from "./login.schema";
 
 /**

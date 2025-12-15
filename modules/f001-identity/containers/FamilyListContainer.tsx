@@ -6,15 +6,15 @@
 
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { FamilyList } from "../components/FamilyList";
-import { useFamilyList } from "@/hooks/useFamilies";
-import { useFamilyPermissions } from "@/hooks/useFamilyPermissions";
+import { useFamilyList } from "../hooks/useFamilies";
+import { useFamilyPermissions } from "../hooks/useFamilyPermissions";
 import { useAuthContext } from "@/contexts/auth.context";
 import { useModalState } from "@/hooks/useModalState";
 import { FamilyFormContainer } from "../forms/family.form.container";
-import { Modal, ModalContent, ModalHeader, ModalTitle } from "@/components/ui/modal";
+import { Modal } from "@/components/ui/modal";
 import { familyRoutes } from "@/utils/routing";
 
 /**
@@ -27,6 +27,8 @@ export function FamilyListContainer() {
   const { data: familiesData, isLoading } = useFamilyList();
   const { canCreateFamily } = useFamilyPermissions({
     currentUserRole: user?.role || null,
+    familyStatus: null, // Not applicable for list view
+    permissions: user?.permissions || null,
   });
   const { isOpen, open, close } = useModalState();
 
@@ -45,25 +47,33 @@ export function FamilyListContainer() {
     close();
   }, [close]);
 
+  // Filter out SoftDeleted families from the display
+  const activeFamilies = useMemo(() => {
+    return (familiesData?.data?.items || []).filter(
+      (family) => family.status !== "SoftDeleted"
+    );
+  }, [familiesData?.data?.items]);
+
   return (
     <>
       <FamilyList
-        families={familiesData?.data?.items || []}
+        families={activeFamilies}
         isLoading={isLoading}
         onCreateFamily={handleCreateFamily}
         canCreateFamily={canCreateFamily}
       />
 
-      <Modal open={isOpen} onOpenChange={close}>
-        <ModalContent>
-          <ModalHeader>
-            <ModalTitle>Create Family</ModalTitle>
-          </ModalHeader>
+      <Modal
+        isOpen={isOpen}
+        onClose={close}
+        title="Create Family"
+      >
+        <div className="p-1">
           <FamilyFormContainer
             onSuccess={handleCreateSuccess}
             onCancel={close}
           />
-        </ModalContent>
+        </div>
       </Modal>
     </>
   );

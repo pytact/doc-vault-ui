@@ -5,7 +5,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { RoleService } from "@/services/roles/role.service";
-import { RoleListResponse } from "@/types/responses/role.responses";
+import { RoleListResponse } from "@/modules/f001-identity/types/responses/role";
 
 /**
  * Role list query hook

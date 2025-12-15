@@ -7,9 +7,10 @@
 "use client";
 
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import {
   Form,
   FormField,
@@ -30,6 +31,8 @@ interface FamilyFormProps {
   onSubmit: (values: FamilyFormSchema) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
+  showCard?: boolean;
+  form?: UseFormReturn<FamilyFormSchema>;
 }
 
 /**
@@ -41,18 +44,36 @@ export function FamilyForm({
   onSubmit,
   onCancel,
   isLoading = false,
+  showCard = true,
+  form: formProp,
 }: FamilyFormProps) {
-  const form = useForm<FamilyFormSchema>({
+  const internalForm = useForm<FamilyFormSchema>({
     resolver: zodResolver(FamilySchema),
     defaultValues: getFamilyDefaultValues(initialName),
     mode: "onChange",
   });
 
-  const handleSubmit = form.handleSubmit(async (data) => {
-    await onSubmit(data);
-  });
+  // Use provided form instance or create internal one
+  const form = formProp || internalForm;
 
-  return (
+  const handleSubmit = form.handleSubmit(
+    async (data) => {
+    console.log("FamilyForm.handleSubmit - Form data:", data);
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      console.error("FamilyForm.handleSubmit - Error:", error);
+        // Re-throw error so container can handle it properly
+        throw error;
+    }
+    },
+    (errors) => {
+      // Handle validation errors
+      console.error("FamilyForm validation errors:", errors);
+    }
+  );
+
+  const formContent = (
     <Form form={form}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <FormField
@@ -63,7 +84,12 @@ export function FamilyForm({
               <FormLabel>Family Name</FormLabel>
               <FormControl>
                 <Input
-                  {...field}
+                  value={field.value}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    field.onChange(e.target.value);
+                  }}
+                  onBlur={field.onBlur}
+                  name={field.name}
                   type="text"
                   placeholder="Enter family name"
                   disabled={isLoading}
@@ -95,5 +121,27 @@ export function FamilyForm({
       </form>
     </Form>
   );
-});
+
+  if (!showCard) {
+    return formContent;
+  }
+
+  return (
+    <Card variant="elevated">
+      <CardHeader>
+        <h2 className="text-xl font-semibold text-slate-900">
+          {initialName ? "Edit Family" : "Family Information"}
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          {initialName
+            ? "Update the family name below"
+            : "Enter the name for the new family"}
+        </p>
+      </CardHeader>
+      <CardBody>
+        {formContent}
+      </CardBody>
+    </Card>
+  );
+}
 

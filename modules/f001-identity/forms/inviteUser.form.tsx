@@ -29,6 +29,7 @@ interface InviteUserFormProps {
   onSubmit: (values: InviteUserFormSchema) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
+  availableRoles?: Array<{ id: string; name: string }>;
 }
 
 /**
@@ -39,6 +40,7 @@ export const InviteUserForm = React.memo(function InviteUserForm({
   onSubmit,
   onCancel,
   isLoading = false,
+  availableRoles = [],
 }: InviteUserFormProps) {
   const form = useForm<InviteUserFormSchema>({
     resolver: zodResolver(InviteUserSchema),
@@ -76,6 +78,39 @@ export const InviteUserForm = React.memo(function InviteUserForm({
           )}
         />
 
+        <FormField
+          control={form.control}
+          name="role_id"
+          render={({ field, fieldState }) => (
+            <FormItem>
+              <FormLabel>Role</FormLabel>
+              <FormControl>
+                <select
+                  {...field}
+                  disabled={isLoading}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                    fieldState.error
+                      ? "border-danger-500"
+                      : "border-gray-300"
+                  } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <option value="">Select a role</option>
+                  {availableRoles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </FormControl>
+              {fieldState.error && (
+                <p className="text-sm text-danger-600 mt-1">
+                  {fieldState.error.message}
+                </p>
+              )}
+            </FormItem>
+          )}
+        />
+
         <div className="flex justify-end gap-2 pt-4">
           <Button
             type="button"
@@ -97,5 +132,5 @@ export const InviteUserForm = React.memo(function InviteUserForm({
       </form>
     </Form>
   );
-}
+});
 

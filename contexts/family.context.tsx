@@ -7,8 +7,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { useFamily } from "@/hooks/useFamilies";
-import { FamilyResponse } from "@/types/responses/family.responses";
+import { useFamily } from "@/modules/f001-identity/hooks/useFamilies";
+import { FamilyResponse } from "@/modules/f001-identity/types/responses/family";
 import { useAuthContext } from "./auth.context";
 
 interface FamilyContextValue {
@@ -48,8 +48,8 @@ export function FamilyProvider({ children }: FamilyProviderProps) {
 
   // Update current family when family data changes
   useEffect(() => {
-    if (familyData?.data) {
-      setCurrentFamilyState(familyData.data);
+    if (familyData?.data?.data) {
+      setCurrentFamilyState(familyData.data.data);
     } else {
       setCurrentFamilyState(null);
     }

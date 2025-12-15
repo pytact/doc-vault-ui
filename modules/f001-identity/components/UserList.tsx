@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
-import { useUserListTransform } from "@/hooks/useUserListTransform";
-import type { UserListResponseItem } from "@/types/responses/user.responses";
+import { useUserListTransform } from "../hooks/useUserListTransform";
+import type { UserListResponseItem } from "../types/responses/user";
 import Link from "next/link";
 import { userRoutes } from "@/utils/routing";
 
@@ -21,6 +21,10 @@ interface UserListProps {
   isLoading?: boolean;
   onInviteUser: () => void;
   canInviteUsers: boolean;
+  title?: string;
+  description?: string;
+  onUserClick?: (userId: string) => void; // Optional callback for custom navigation
+  getUserDetailRoute?: (userId: string) => string; // Optional function to get detail route
 }
 
 /**
@@ -32,6 +36,10 @@ export const UserList = React.memo(function UserList({
   isLoading = false,
   onInviteUser,
   canInviteUsers,
+  title = "Users",
+  description = "Manage users in your family",
+  onUserClick,
+  getUserDetailRoute,
 }: UserListProps) {
   const { transformedUsers } = useUserListTransform({ users });
 
@@ -70,9 +78,9 @@ export const UserList = React.memo(function UserList({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
             <p className="mt-1 text-sm text-gray-600">
-              Manage users in your family
+              {description}
             </p>
           </div>
           {canInviteUsers && (
@@ -100,15 +108,29 @@ export const UserList = React.memo(function UserList({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transformedUsers.map((user) => (
+              {transformedUsers.map((user) => {
+                const detailRoute = getUserDetailRoute 
+                  ? getUserDetailRoute(user.id)
+                  : userRoutes.detail(user.id);
+                
+                return (
                 <TableRow key={user.id} className="cursor-pointer hover:bg-gray-50">
                   <TableCell>
+                      {onUserClick ? (
+                        <button
+                          onClick={() => onUserClick(user.id)}
+                          className="font-medium text-primary-600 hover:text-primary-700 text-left"
+                        >
+                          {user.name}
+                        </button>
+                      ) : (
                     <Link
-                      href={userRoutes.detail(user.id)}
+                          href={detailRoute}
                       className="font-medium text-primary-600 hover:text-primary-700"
                     >
                       {user.name}
                     </Link>
+                      )}
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
@@ -119,7 +141,8 @@ export const UserList = React.memo(function UserList({
                   </TableCell>
                   <TableCell>{user.createdAtFormatted}</TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         )}

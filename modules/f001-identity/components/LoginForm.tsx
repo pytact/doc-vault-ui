@@ -12,8 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { useForm } from "react-hook-form";
-import { useLoginForm } from "@/hooks/useLoginForm";
-import type { LoginFormSchema } from "@/hooks/useLoginForm";
+import { useLoginForm } from "../hooks/useLoginForm";
+import type { LoginFormSchema } from "../hooks/useLoginForm";
 
 interface LoginFormProps {
   onSubmit: (data: LoginFormSchema) => Promise<void>;

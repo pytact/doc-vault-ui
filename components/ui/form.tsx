@@ -53,7 +53,7 @@ export interface FormFieldProps<
       errors: Partial<Record<keyof TFieldValues, { message?: string }>>;
       isSubmitting: boolean;
     };
-  }) => React.ReactNode;
+  }) => React.ReactElement;
 }
 
 /**
@@ -69,8 +69,8 @@ export function FormField<TFieldValues extends FieldValues = FieldValues>({
     <Controller
       control={control}
       name={name}
-      render={(props) =>
-        render({
+      render={(props) => {
+        const result = render({
           field: {
             value: props.field.value,
             onChange: props.field.onChange,
@@ -80,8 +80,9 @@ export function FormField<TFieldValues extends FieldValues = FieldValues>({
           },
           fieldState: props.fieldState,
           formState: props.formState,
-        })
-      }
+        });
+        return result as React.ReactElement;
+      }}
     />
   );
 }

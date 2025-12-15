@@ -5,30 +5,38 @@
 
 import { httpClient as http } from "@/lib/http";
 import { normalizeAPIError } from "@/core/http/normalizers/error-normalizer";
-import { UserInviteRequest, UserActivateRequest } from "@/types/requests/user.requests";
-import { InvitationValidateQuery } from "@/types/requests/invitation.requests";
+import { UserInviteRequest, UserActivateRequest } from "@/modules/f001-identity/types/requests/user";
 import {
   InvitationCreateResponse,
   InvitationValidationResponse,
   InvitationActivateResponse,
-} from "@/types/responses/invitation.responses";
+} from "@/modules/f001-identity/types/responses/invitation";
 import { sessionStorageKeys } from "@/utils/constants/common";
-
-const invitationBasePath = "/v1/invitations";
 
 export const InvitationService = {
   /**
    * Create user invitation
-   * POST /v1/invite/families/{family_id}/users/
+   * POST /v1/invite
    */
   create: async (
     familyId: string,
     payload: UserInviteRequest
   ): Promise<InvitationCreateResponse> => {
     try {
+      // Get frontend URL from environment or window location
+      const frontendUrl = typeof window !== "undefined" 
+        ? window.location.origin 
+        : process.env.NEXT_PUBLIC_FRONTEND_URL || "";
+
+      // Include family_id and frontend_url in the payload
+      const requestPayload: UserInviteRequest = {
+        ...payload,
+        family_id: familyId,
+        frontend_url: frontendUrl,
+      };
       const response = await http.post<InvitationCreateResponse>(
-        `/v1/invite/families/${familyId}/users/`,
-        payload
+        `/v1/invite`,
+        requestPayload
       );
       return response.data;
     } catch (error) {
@@ -38,41 +46,54 @@ export const InvitationService = {
 
   /**
    * Validate invitation token
-   * GET /v1/invitations/validate
+   * GET /v1/invitation/{token}
    */
   validate: async (
-    params: InvitationValidateQuery
+    token: string
   ): Promise<InvitationValidationResponse> => {
     try {
-      const searchParams = new URLSearchParams();
-      searchParams.append("token", params.token);
-
+      // URL encode the token to handle special characters
+      const encodedToken = encodeURIComponent(token);
+      console.log("InvitationService.validate - Token:", token, "Encoded:", encodedToken);
       const response = await http.get<InvitationValidationResponse>(
-        `${invitationBasePath}/validate?${searchParams.toString()}`
+        `/v1/invitations/${encodedToken}`
       );
+      console.log("InvitationService.validate - Response:", response.data);
       return response.data;
     } catch (error) {
+      console.error("InvitationService.validate - Error:", error);
       throw normalizeAPIError(error);
     }
   },
 
   /**
    * Activate user account
-   * POST /v1/invitations/activate
+   * POST /v1/invitation/activate/{token}
    */
   activate: async (
-    payload: UserActivateRequest
+    token: string,
+    payload: Omit<UserActivateRequest, 'token'>
   ): Promise<InvitationActivateResponse> => {
     try {
+      // Get frontend URL from environment or window location
+      const frontendUrl = typeof window !== "undefined" 
+        ? window.location.origin 
+        : process.env.NEXT_PUBLIC_FRONTEND_URL || "";
+
+      // Include token and frontend_url in the payload
+      const requestPayload: UserActivateRequest = {
+        ...payload,
+        token: token,
+        frontend_url: frontendUrl,
+      };
+
       const response = await http.post<InvitationActivateResponse>(
-        `${invitationBasePath}/activate`,
-        payload
+        `/v1/invitations/activate/${token}`,
+        requestPayload
       );
 
-      // Store token in sessionStorage
-      if (typeof window !== "undefined" && response.data.data.token) {
-        sessionStorage.setItem(sessionStorageKeys.accessToken, response.data.data.token);
-      }
+      // Don't store token - user should log in manually after activation
+      // Token will be stored after successful login
 
       return response.data;
     } catch (error) {

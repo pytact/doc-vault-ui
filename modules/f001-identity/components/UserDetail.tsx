@@ -10,8 +10,8 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/ui/card";
-import { useUserDetailTransform } from "@/hooks/useUserDetailTransform";
-import type { UserDetailResponse } from "@/types/responses/user.responses";
+import { useUserDetailTransform } from "../hooks/useUserDetailTransform";
+import type { UserDetailResponse } from "../types/responses/user";
 import Link from "next/link";
 import { userRoutes } from "@/utils/routing";
 
@@ -21,6 +21,9 @@ interface UserDetailProps {
   currentUserId: string | null;
   onManageRoles: () => void;
   onSoftDelete: () => void;
+  backRoute?: string; // Optional back route, defaults to userRoutes.list
+  canSoftDelete?: boolean; // Whether the current user can soft delete this user
+  canManageRoles?: boolean; // Whether the current user can manage roles for this user
 }
 
 /**
@@ -33,12 +36,38 @@ export const UserDetail = React.memo(function UserDetail({
   currentUserId,
   onManageRoles,
   onSoftDelete,
+  backRoute = userRoutes.list, // Default to standard users list
+  canSoftDelete = true, // Default to true for backward compatibility
+  canManageRoles, // Use permission from container (checks if FamilyAdmin can manage SuperAdmin)
 }: UserDetailProps) {
   const { transformedUser, allowedRoleManagement, canPerformActions } =
     useUserDetailTransform({
       user,
       currentUserRole,
       currentUserId,
+    });
+
+  // Use canManageRoles from props if provided, otherwise fall back to allowedRoleManagement
+  // This ensures FamilyAdmin cannot manage SuperAdmin roles
+  const canManageRolesFinal = canManageRoles !== undefined ? canManageRoles : allowedRoleManagement;
+
+  // Calculate if delete button should be shown
+  const isSuperAdmin = currentUserRole === "superadmin";
+  const isNotSelf = currentUserId !== user?.id;
+  const shouldShowDelete = isNotSelf && (isSuperAdmin || canSoftDelete);
+
+  // Debug logging
+  console.log("UserDetail - Props and State:", {
+    canSoftDelete,
+    canPerformActions,
+    allowedRoleManagement,
+    userStatus: transformedUser?.status,
+    currentUserRole,
+    currentUserId,
+    targetUserId: user?.id,
+    isSuperAdmin,
+    isNotSelf,
+    shouldShowDelete,
     });
 
   const getStatusBadge = React.useCallback(
@@ -66,7 +95,7 @@ export const UserDetail = React.memo(function UserDetail({
       <div className="flex items-center justify-between">
         <div>
           <Link
-            href={userRoutes.list}
+            href={backRoute}
             className="text-sm text-primary-600 hover:text-primary-700"
           >
             ← Back to Users
@@ -125,14 +154,16 @@ export const UserDetail = React.memo(function UserDetail({
 
         {canPerformActions && transformedUser.status !== "SoftDeleted" && (
           <CardFooter className="flex gap-2">
-            {allowedRoleManagement && (
+            {canManageRolesFinal && (
               <Button onClick={onManageRoles} variant="outline">
                 Manage Roles
               </Button>
             )}
+            {shouldShowDelete && (
             <Button onClick={onSoftDelete} variant="danger">
-              Soft Delete User
+                Delete User
             </Button>
+            )}
           </CardFooter>
         )}
       </Card>

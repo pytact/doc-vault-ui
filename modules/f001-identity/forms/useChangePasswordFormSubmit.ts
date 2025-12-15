@@ -4,7 +4,8 @@
  * Based on R10 rules
  */
 
-import { useChangePassword } from "@/hooks/useProfile";
+import { useChangePassword } from "../hooks/useProfile";
+import { useProfile } from "../hooks/useProfile";
 import type { ChangePasswordFormSchema } from "./changePassword.schema";
 
 /**
@@ -13,11 +14,22 @@ import type { ChangePasswordFormSchema } from "./changePassword.schema";
  */
 export function useChangePasswordFormSubmit() {
   const changePasswordMutation = useChangePassword();
+  const { data: profileData, refetch: refetchProfile } = useProfile();
 
   async function submit(values: ChangePasswordFormSchema) {
+    // Refetch profile data to get the latest ETag before password change
+    const freshProfileData = await refetchProfile();
+    
+    // Get ETag from fresh profile data or cached data
+    const etag = freshProfileData.data?.etag || profileData?.etag;
+    if (!etag) {
+      throw new Error("ETag is required for password change. Please refresh the page and try again.");
+    }
+
     return await changePasswordMutation.mutateAsync({
       current_password: values.current_password,
       new_password: values.new_password,
+      etag,
     });
   }
 

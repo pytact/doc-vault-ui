@@ -20,13 +20,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
-import { usePasswordValidation } from "@/hooks/usePasswordValidation";
+import { usePasswordValidation } from "../hooks/usePasswordValidation";
 import {
   createChangePasswordSchema,
   changePasswordDefaultValues,
   type ChangePasswordFormSchema,
 } from "./changePassword.schema";
-import type { PasswordRules } from "@/types/responses/common.responses";
+import type { PasswordRules } from "@/types/responses/common";
 
 interface ChangePasswordFormProps {
   onSubmit: (values: ChangePasswordFormSchema) => Promise<void>;
@@ -216,5 +216,5 @@ export const ChangePasswordForm = React.memo(function ChangePasswordForm({
       </form>
     </Form>
   );
-}
+});
 

@@ -8,12 +8,13 @@
 
 import { RouteGuard } from "@/core/guards/route-guard";
 import { UserDetailContainer } from "@/modules/f001-identity/containers/UserDetailContainer";
+import { UserRole } from "@/modules/f001-identity/types/responses/auth";
 
 export default function UserDetailPage() {
   return (
     <RouteGuard
       requireAuth={true}
-      requiredRoles={["familyadmin", "superadmin"]}
+      roles={[UserRole.FamilyAdmin, UserRole.SuperAdmin]}
     >
       <UserDetailContainer />
     </RouteGuard>

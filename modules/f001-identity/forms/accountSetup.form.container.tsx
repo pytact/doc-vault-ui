@@ -17,11 +17,12 @@ import {
   type AccountSetupFormSchema,
 } from "./accountSetup.schema";
 import { useAccountSetupFormSubmit } from "./useAccountSetupFormSubmit";
-import { useValidateInvitation } from "@/hooks/useInvitations";
+import { useValidateInvitation } from "../hooks/useInvitations";
 import { useNotificationContext } from "@/contexts/notification.context";
 import { mapApiErrorsToForm } from "./utils/errorMapper";
 import { InviteActivationValidate } from "../components/InviteActivationValidate";
 import { InviteExpired } from "../components/InviteExpired";
+import { authRoutes, invitationRoutes } from "@/utils/routing";
 
 /**
  * Account setup form container component
@@ -69,10 +70,14 @@ export function AccountSetupFormContainer() {
       await submit(values);
       addNotification({
         type: "success",
-        message: "Account activated successfully",
+        message: "Account activated successfully. Please log in to continue.",
         title: "Welcome!",
       });
-      router.push(authRoutes.login);
+      
+      // Redirect to login after a short delay to show the notification
+      setTimeout(() => {
+        router.replace(authRoutes.login);
+      }, 500);
     } catch (err) {
       const errorMessage =
         err instanceof Error

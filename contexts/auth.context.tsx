@@ -7,16 +7,16 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { useLogin, useLogout } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
-import { LoginUserInfo } from "@/types/responses/auth.responses";
+import { useLogin, useLogout } from "@/modules/f001-identity/hooks/useAuth";
+import { useProfile } from "@/modules/f001-identity/hooks/useProfile";
+import { LoginUserInfo, AuthLoginResponse } from "@/modules/f001-identity/types/responses/auth";
 import { sessionStorageKeys } from "@/utils/constants/common";
 
 interface AuthContextValue {
   user: LoginUserInfo | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthLoginResponse>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -72,21 +72,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Update user state when profile data changes (only if authenticated)
   useEffect(() => {
-    if (hasToken && profileData?.data) {
-      // Note: Role should come from JWT token, not from profile
-      // For now, we'll use a default or extract from stored user
+    if (hasToken && profileData?.data?.data) {
+      // Get role and permissions from profile data (from /users/me API)
+      // API returns role as object { id, name, permissions } and family as object or null
+      // Note: profileData.data is now { data: ProfileGetResponse, etag?: string }
       const storedUser = typeof window !== "undefined" 
         ? sessionStorage.getItem(sessionStorageKeys.user)
         : null;
       const parsedStoredUser = storedUser ? JSON.parse(storedUser) as LoginUserInfo : null;
       
+      // Extract role name from role object (API returns role as { id, name, permissions })
+      // Handle both object and string formats for backward compatibility
+      const roleFromApi = profileData.data.data.role;
+      const roleName = typeof roleFromApi === 'object' && roleFromApi !== null && 'name' in roleFromApi
+        ? roleFromApi.name
+        : (typeof roleFromApi === 'string' ? roleFromApi : parsedStoredUser?.role || "member");
+      
+      // Extract permissions from role object
+      const permissions = (typeof roleFromApi === 'object' && roleFromApi !== null && 'permissions' in roleFromApi)
+        ? roleFromApi.permissions
+        : (parsedStoredUser?.permissions || {});
+      
+      // Extract family info (API returns family as object or null)
+      const familyId = profileData.data.data.family?.id || null;
+      const familyName = profileData.data.data.family?.name || null;
+      
       const profileUser: LoginUserInfo = {
-        id: profileData.data.id,
-        email: profileData.data.email,
-        name: profileData.data.name,
-        role: parsedStoredUser?.role || "member", // Use stored role or default
-        family_id: profileData.data.family_id,
-        family_name: profileData.data.family_name,
+        id: profileData.data.data.id,
+        email: profileData.data.data.email,
+        name: profileData.data.data.name,
+        role: roleName, // Use role name string from role object
+        family_id: familyId,
+        family_name: familyName,
+        permissions: permissions, // Use permissions from role object
       };
       setUser(profileUser);
       if (typeof window !== "undefined") {
@@ -100,11 +118,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         const response = await loginMutation.mutateAsync({ email, password });
         if (response.data?.user) {
+          // User data now includes role and permissions from /users/me API (called in auth service)
           setUser(response.data.user);
           setHasToken(true); // Token is stored by the service
           if (typeof window !== "undefined") {
             sessionStorage.setItem(sessionStorageKeys.user, JSON.stringify(response.data.user));
           }
+          // Trigger profile refetch to ensure we have the latest data
+          await refetchProfile();
           return response; // Return response so caller can access user data
         }
         return response;
@@ -112,7 +133,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw error;
       }
     },
-    [loginMutation]
+    [loginMutation, refetchProfile]
   );
 
   const logout = useCallback(async () => {

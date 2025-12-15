@@ -67,5 +67,5 @@ export const InviteExpired = React.memo(function InviteExpired({
       </Card>
     </div>
   );
-}
+});
 

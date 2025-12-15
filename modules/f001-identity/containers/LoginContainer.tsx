@@ -9,10 +9,10 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { LoginForm } from "../components/LoginForm";
-import { useLogin } from "@/hooks/useAuth";
+import { useLogin } from "../hooks/useAuth";
 import { useAuthContext } from "@/contexts/auth.context";
 import { useNotificationContext } from "@/contexts/notification.context";
-import type { LoginFormSchema } from "@/hooks/useLoginForm";
+import type { LoginFormSchema } from "../hooks/useLoginForm";
 import { getRoleBasedDashboardRoute } from "@/utils/routing";
 
 /**

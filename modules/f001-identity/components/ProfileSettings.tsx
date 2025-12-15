@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
-import { useProfileForm } from "@/hooks/useProfileForm";
-import type { ProfileFormSchema } from "@/hooks/useProfileForm";
+import { useProfileForm } from "../hooks/useProfileForm";
+import type { ProfileFormSchema } from "../hooks/useProfileForm";
 
 interface ProfileSettingsProps {
   initialName: string;

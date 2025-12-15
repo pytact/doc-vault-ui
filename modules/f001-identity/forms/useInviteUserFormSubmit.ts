@@ -4,7 +4,7 @@
  * Based on R10 rules
  */
 
-import { useInviteUser } from "@/hooks/useUsers";
+import { useInviteUser } from "../hooks/useUsers";
 import { useFamilyContext } from "@/contexts/family.context";
 import type { InviteUserFormSchema } from "./inviteUser.schema";
 

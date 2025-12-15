@@ -9,16 +9,39 @@ import {
   FamilyCreateRequest,
   FamilyUpdateRequest,
   FamilyListParams,
-} from "@/types/requests/family.requests";
+  FamilyDeleteRequest,
+} from "@/modules/f001-identity/types/requests/family";
 import {
   FamilyListResponse,
   FamilyDetailResponse,
   FamilyCreateResponse,
   FamilyUpdateResponse,
   FamilySoftDeleteResponse,
-} from "@/types/responses/family.responses";
+} from "@/modules/f001-identity/types/responses/family";
 
 const basePath = "/v1/families";
+
+/**
+ * Convert updated_at timestamp to ETag format
+ * Format: YYYYMMDDTHHMMSSZ (e.g., "20251215T090603Z")
+ * Input: "2025-12-15T09:06:03.637969Z"
+ */
+function convertUpdatedAtToETag(updatedAt: string): string {
+  try {
+    const date = new Date(updatedAt);
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(date.getUTCDate()).padStart(2, "0");
+    const hours = String(date.getUTCHours()).padStart(2, "0");
+    const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+    const seconds = String(date.getUTCSeconds()).padStart(2, "0");
+    
+    return `${year}${month}${day}T${hours}${minutes}${seconds}Z`;
+  } catch (error) {
+    console.error("convertUpdatedAtToETag - Error converting updated_at to ETag:", error);
+    return "";
+  }
+}
 
 export const FamilyService = {
   /**
@@ -50,14 +73,46 @@ export const FamilyService = {
   /**
    * Get family by ID
    * GET /v1/families/{family_id}
+   * Returns both data and eTag from response headers
    */
-  getById: async (familyId: string): Promise<FamilyDetailResponse> => {
+  getById: async (familyId: string): Promise<{ data: FamilyDetailResponse; etag?: string }> => {
     try {
       const response = await http.get<FamilyDetailResponse>(
         `${basePath}/${familyId}`
       );
-      return response.data;
+      
+      // Try to get ETag from response headers first
+      let etag: string | undefined;
+      
+      if (response.headers) {
+        etag = (response.headers as any)["etag"] || 
+               (response.headers as any)["ETag"] ||
+               (response.headers as any)["ETAG"];
+      }
+      
+      // Clean up ETag from header: remove quotes and whitespace
+      if (etag) {
+        etag = String(etag).replace(/^"|"$/g, "").trim();
+        console.log("FamilyService.getById - ETag from headers:", etag);
+      }
+      
+      // If ETag not in headers, generate it from updated_at field
+      if (!etag && response.data?.data?.updated_at) {
+        console.log("FamilyService.getById - ETag not in headers, generating from updated_at:", response.data.data.updated_at);
+        etag = convertUpdatedAtToETag(response.data.data.updated_at);
+        console.log("FamilyService.getById - Generated ETag:", etag);
+      }
+      
+      if (!etag) {
+        console.warn("FamilyService.getById - WARNING: Could not generate ETag from headers or updated_at!");
+      }
+      
+      return {
+        data: response.data,
+        etag: etag || undefined,
+      };
     } catch (error) {
+      console.error("FamilyService.getById - Error:", error);
       throw normalizeAPIError(error);
     }
   },
@@ -90,37 +145,54 @@ export const FamilyService = {
     etag?: string
   ): Promise<FamilyUpdateResponse> => {
     try {
-      const headers = etag ? { "If-Match": etag } : {};
+      // ETag in If-Match header should be wrapped in quotes per HTTP spec
+      const ifMatchValue = etag ? `"${etag}"` : undefined;
+      const headers = ifMatchValue ? { "If-Match": ifMatchValue } : {};
+      const url = `${basePath}/${familyId}`;
+      console.log("FamilyService.update - URL:", url, "Payload:", payload, "ETag (raw):", etag, "If-Match header:", ifMatchValue, "Headers:", headers);
       const response = await http.patch<FamilyUpdateResponse>(
-        `${basePath}/${familyId}`,
+        url,
         payload,
         { headers }
       );
+      console.log("FamilyService.update - Response:", response.data);
       return response.data;
     } catch (error) {
+      console.error("FamilyService.update - Error:", error);
       throw normalizeAPIError(error);
     }
   },
 
   /**
-   * Soft delete family
-   * PATCH /v1/families/{family_id}/soft-delete
+   * Delete family (backend handles soft-delete automatically)
+   * DELETE /v1/families/{family_id}
+   * ETag is passed in the request payload
    */
-  softDelete: async (
+  delete: async (
     familyId: string,
     etag?: string
   ): Promise<FamilySoftDeleteResponse> => {
     try {
-      const headers = etag ? { "If-Match": etag } : {};
-      const response = await http.patch<FamilySoftDeleteResponse>(
-        `${basePath}/${familyId}/soft-delete`,
-        {},
-        { headers }
+      if (!etag) {
+        throw new Error("ETag is required for delete operations");
+      }
+
+      // ETag and family_id are passed in the request payload
+      const payload: FamilyDeleteRequest = {
+        family_id: familyId,
+        etag: etag,
+      };
+
+      console.log("FamilyService.delete - URL:", `${basePath}/${familyId}`, "Payload:", payload);
+      const response = await http.delete<FamilySoftDeleteResponse>(
+        `${basePath}/${familyId}`,
+        { data: payload }
       );
+      console.log("FamilyService.delete - Response:", response.data);
       return response.data;
     } catch (error) {
+      console.error("FamilyService.delete - Error:", error);
       throw normalizeAPIError(error);
     }
   },
 };
-
