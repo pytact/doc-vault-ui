@@ -32,7 +32,6 @@ function convertUpdatedAtToETag(updatedAt: string): string {
     
     return `${year}${month}${day}T${hours}${minutes}${seconds}Z`;
   } catch (error) {
-    console.error("convertUpdatedAtToETag - Error converting updated_at to ETag:", error);
     return "";
   }
 }
@@ -69,21 +68,12 @@ export const ProfileService = {
         }
       }
       
-      // Clean up ETag from header: remove quotes and whitespace
       if (etag) {
         etag = String(etag).replace(/^"|"$/g, "").trim();
-        console.log("ProfileService.get - ETag from headers:", etag);
       }
       
-      // If ETag not in headers, generate it from updated_at field
       if (!etag && response.data?.data?.updated_at) {
-        console.log("ProfileService.get - ETag not in headers, generating from updated_at:", response.data.data.updated_at);
         etag = convertUpdatedAtToETag(response.data.data.updated_at);
-        console.log("ProfileService.get - Generated ETag:", etag);
-      }
-      
-      if (!etag) {
-        console.warn("ProfileService.get - WARNING: Could not generate ETag from headers or updated_at!");
       }
       
       return {
@@ -91,7 +81,6 @@ export const ProfileService = {
         etag: etag || undefined,
       };
     } catch (error) {
-      console.error("ProfileService.get - Error:", error);
       throw normalizeAPIError(error);
     }
   },
@@ -112,9 +101,7 @@ export const ProfileService = {
         throw new Error("ETag is required for update operations. Please refresh the page and try again.");
       }
 
-      // ETag in If-Match header should be wrapped in quotes per HTTP spec
-      const ifMatchValue = `"${etag}"`;
-
+      // ETag in If-Match header (without quotes)
       // Build payload - include user_id and name
       const requestPayload: UserProfileUpdateRequest & { user_id: string } = {
         user_id: userId,
@@ -127,21 +114,17 @@ export const ProfileService = {
         requestPayload.current_password = payload.current_password;
       }
 
-      // Set headers explicitly - ensure If-Match header is sent
       const headers: Record<string, string> = {
-        "If-Match": ifMatchValue,
+        "If-Match": etag,
       };
 
-      console.log("ProfileService.update - URL:", `/v1/users/${userId}`, "Payload:", requestPayload, "ETag (raw):", etag, "If-Match header:", ifMatchValue, "Headers:", headers);
       const response = await http.patch<ProfileUpdateResponse>(
         `/v1/users/${userId}`,
         requestPayload,
         { headers }
       );
-      console.log("ProfileService.update - Response:", response.data);
       return response.data;
     } catch (error) {
-      console.error("ProfileService.update - Error:", error);
       throw normalizeAPIError(error);
     }
   },

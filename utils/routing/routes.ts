@@ -72,6 +72,7 @@ export const taxonomyRoutes = {
 /**
  * Document management routes
  * F-003: Document management routes
+ * F-004: Document sharing routes
  */
 export const documentRoutes = {
   list: "/documents",
@@ -79,6 +80,7 @@ export const documentRoutes = {
   detail: (documentId: string) => `/documents/${documentId}`,
   edit: (documentId: string) => `/documents/${documentId}/edit`,
   preview: (documentId: string) => `/documents/${documentId}/preview`,
+  sharing: (documentId: string) => `/documents/${documentId}/sharing`,
   notAccessible: (documentId: string) => `/documents/${documentId}/not-accessible`,
 };
 

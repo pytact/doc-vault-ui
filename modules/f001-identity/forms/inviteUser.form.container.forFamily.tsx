@@ -54,8 +54,6 @@ export function InviteUserFormContainerForFamily({
 
   const handleSubmit = async (values: InviteUserFormSchema) => {
     try {
-      console.log("InviteUserFormContainerForFamily - Submitting invite with values:", values);
-      console.log("InviteUserFormContainerForFamily - Role ID:", values.role_id);
       await inviteMutation.mutateAsync({
         familyId,
         payload: values, // This includes email and role_id

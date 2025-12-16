@@ -40,18 +40,10 @@ export function UserListContainerAll() {
       const userItem = usersData?.data?.items?.find(u => u.id === userId);
       const familyId = userItem?.family_id;
       
-      console.log("UserListContainerAll - User click:", { userId, familyId, userItem });
-      
       if (familyId) {
-        // Navigate to the family-specific user detail route
-        // This route includes family_id in the URL, so the API can be called
         const route = userRoutes.detailForFamily(familyId, userId);
-        console.log("UserListContainerAll - Navigating to:", route);
         router.push(route);
       } else {
-        // If family_id is not in the response, we can't call the API
-        // The API GET /v1/families/{family_id}/users/{user_id} requires family_id
-        console.error("UserListContainerAll - family_id not available in user list response");
         addNotification({
           type: "error",
           message: "Unable to determine user's family. The user list response must include family_id. Please view the user from their family's user list.",
@@ -59,7 +51,6 @@ export function UserListContainerAll() {
         });
       }
     } catch (error) {
-      console.error("Error navigating to user detail:", error);
       addNotification({
         type: "error",
         message: "Failed to navigate to user details. Please try again.",

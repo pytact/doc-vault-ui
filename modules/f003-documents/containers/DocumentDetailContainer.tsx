@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { documentRoutes } from "@/utils/routing";
 import { useNotificationContext } from "@/contexts/notification.context";
 import { DeleteDocumentModal } from "../components/DeleteDocumentModal";
+import { useDocumentAssignmentPermissions } from "@/modules/f004-sharing/hooks/useDocumentAssignmentPermissions";
 
 /**
  * Document detail container component
@@ -37,7 +38,7 @@ export function DocumentDetailContainer() {
   const { categoryOptions, allSubcategories } = useTaxonomyContext();
   const deleteModal = useModalState();
 
-  const { data: documentData, isLoading, error, refetch: refetchDocument } = useGetDocument(documentId);
+  const { data: documentData, isLoading, error } = useGetDocument(documentId);
   const deleteMutation = useDeleteDocument();
 
   // Create category and subcategory maps for transformation
@@ -65,13 +66,21 @@ export function DocumentDetailContainer() {
       currentUserRole: user?.role || null,
     });
 
-  // Debug: Log canDelete value to verify it's being passed correctly
-  useEffect(() => {
-    console.log("DocumentDetailContainer - canDelete value:", canDelete);
-    console.log("DocumentDetailContainer - canEdit value:", canEdit);
-    console.log("DocumentDetailContainer - user role:", user?.role);
-    console.log("DocumentDetailContainer - document permission:", documentData?.data?.data?.permission);
-  }, [canDelete, canEdit, user?.role, documentData?.data?.data?.permission]);
+  // F-004: Check permissions for document sharing
+  const sharingPermissions = useDocumentAssignmentPermissions({
+    currentUserId: user?.id || null,
+    documentOwnerId: documentData?.data?.data?.owner_user_id || null,
+    currentUserRole: (user?.role as "superadmin" | "familyadmin" | "member") || null,
+    isDocumentDeleted: documentData?.data?.data?.is_del || false,
+    isDocumentActive: documentData?.data?.data?.is_del === false,
+  });
+
+  // Show Manage Sharing button if user can manage sharing and document is active
+  const canManageSharing = useMemo(() => {
+    if (!transformedDocument) return false;
+    return sharingPermissions.canManageSharing && !transformedDocument.is_del;
+  }, [sharingPermissions.canManageSharing, transformedDocument]);
+
 
   const handleEdit = useCallback(() => {
     if (documentId) {
@@ -93,25 +102,22 @@ export function DocumentDetailContainer() {
       return;
     }
 
-    try {
-      // Refetch document to get the latest ETag before delete
-      const freshDocumentData = await refetchDocument();
-      const freshEtag = freshDocumentData.data?.etag || documentData?.etag;
-      
-      if (!freshEtag) {
-        addNotification({
-          type: "error",
-          message: "ETag is required for delete operations. Please refresh the page and try again.",
-          title: "Delete Failed",
-        });
-        return;
-      }
+    // Use existing ETag from already-loaded document data (no refetch needed)
+    const etag = documentData?.etag;
+    
+    if (!etag) {
+      addNotification({
+        type: "error",
+        message: "ETag is required for delete operations. Please refresh the page and try again.",
+        title: "Delete Failed",
+      });
+      return;
+    }
 
-      console.log("DocumentDetailContainer.handleDeleteConfirm - Using ETag:", freshEtag);
-      
+    try {
       await deleteMutation.mutateAsync({
         documentId,
-        etag: freshEtag,
+        etag,
       });
       addNotification({
         type: "success",
@@ -167,6 +173,13 @@ export function DocumentDetailContainer() {
       });
     }
   }, [documentId, transformedDocument, addNotification]);
+
+  // F-004: Handle navigation to sharing page
+  const handleManageSharing = useCallback(() => {
+    if (documentId) {
+      router.push(documentRoutes.sharing(documentId));
+    }
+  }, [router, documentId]);
 
   if (isLoading) {
     return (
@@ -250,6 +263,11 @@ export function DocumentDetailContainer() {
               {canEdit && (
                 <Button onClick={handleEdit} variant="primary">
                   Edit Document
+                </Button>
+              )}
+              {canManageSharing && (
+                <Button onClick={handleManageSharing} variant="outline">
+                  Manage Sharing
                 </Button>
               )}
               <Button 
@@ -350,6 +368,14 @@ export function DocumentDetailContainer() {
                   variant="outline"
                 >
                   Download PDF
+                </Button>
+              )}
+              {canManageSharing && (
+                <Button
+                  onClick={handleManageSharing}
+                  variant="outline"
+                >
+                  Manage Sharing
                 </Button>
               )}
               {canDelete && (

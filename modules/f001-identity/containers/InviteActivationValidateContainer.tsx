@@ -23,14 +23,6 @@ export function InviteActivationValidateContainer() {
 
   const { data: validationData, isLoading, error, isError } = useValidateInvitation(token);
 
-  // Log for debugging
-  React.useEffect(() => {
-    console.log("InviteActivationValidateContainer - Token:", token);
-    console.log("InviteActivationValidateContainer - Loading:", isLoading);
-    console.log("InviteActivationValidateContainer - Error:", error);
-    console.log("InviteActivationValidateContainer - Data:", validationData);
-  }, [token, isLoading, error, validationData]);
-
   useEffect(() => {
     if (!isLoading && validationData?.data) {
       const { redirect_target, is_token_valid, is_token_expired } = validationData.data;
@@ -43,9 +35,7 @@ export function InviteActivationValidateContainer() {
     }
   }, [validationData, isLoading, token, router]);
 
-  // Handle error state
   if (isError && !isLoading) {
-    console.error("InviteActivationValidateContainer - Validation error:", error);
     // Redirect to expired page on error
     router.replace(`/invite/${token}/expired`);
     return <InviteActivationValidate />;

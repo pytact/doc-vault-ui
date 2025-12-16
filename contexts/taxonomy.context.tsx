@@ -47,8 +47,13 @@ interface TaxonomyProviderProps {
  * 
  * Taxonomy data is cached via React Query with Infinity staleTime,
  * so this context simply exposes the data globally without additional caching.
+ * 
+ * IMPORTANT: This provider fetches taxonomy data eagerly when mounted,
+ * ensuring it's available immediately when document forms are loaded.
  */
 export function TaxonomyProvider({ children }: TaxonomyProviderProps) {
+  // This hook will automatically fetch taxonomy data when the provider mounts
+  // Since it's in the root Providers component, taxonomy will be loaded on app startup
   const taxonomyData = useTaxonomyData();
 
   const value: TaxonomyContextValue = {

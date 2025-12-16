@@ -56,12 +56,6 @@ export const UserDetail = React.memo(function UserDetail({
   // So we just need to check if it's true and user is not deleted
   const shouldShowDelete = canSoftDelete && transformedUser?.status !== "SoftDeleted";
 
-  // Debug logging
-  console.log("UserDetail - Props and State:", {
-    canSoftDelete,
-    canPerformActions,
-    allowedRoleManagement,
-    userStatus: transformedUser?.status,
     currentUserRole,
     currentUserId,
     targetUserId: user?.id,
@@ -151,16 +145,21 @@ export const UserDetail = React.memo(function UserDetail({
         </CardBody>
 
         {canPerformActions && transformedUser.status !== "SoftDeleted" && (
-          <CardFooter className="flex gap-2">
+          <CardFooter className="flex flex-wrap gap-2 justify-start items-center">
             {canManageRolesFinal && (
               <Button onClick={onManageRoles} variant="outline">
                 Manage Roles
               </Button>
             )}
             {shouldShowDelete && (
-            <Button onClick={onSoftDelete} variant="danger">
+              <Button 
+                onClick={onSoftDelete} 
+                variant="danger"
+                className="flex-shrink-0"
+                style={{ display: 'block' }}
+              >
                 Delete User
-            </Button>
+              </Button>
             )}
           </CardFooter>
         )}

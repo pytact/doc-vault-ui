@@ -15,16 +15,11 @@ import type { FamilyFormSchema } from "./family.schema";
 export function useFamilyFormSubmit(familyId?: string) {
   const createMutation = useCreateFamily();
   const updateMutation = useUpdateFamily();
-  const { data: familyData, refetch: refetchFamily } = useFamily(familyId || null);
+  const { data: familyData } = useFamily(familyId || null);
 
   async function submit(values: FamilyFormSchema) {
     if (familyId) {
-      // Refetch to get the latest ETag before update
-      console.log("useFamilyFormSubmit - Refetching family to get latest ETag...");
-      const freshData = await refetchFamily();
-      const etag = freshData.data?.etag || familyData?.etag;
-      
-      console.log("useFamilyFormSubmit - Family update - familyId:", familyId, "etag:", etag, "payload:", values);
+      const etag = familyData?.etag;
       
       if (!etag) {
         throw new Error("ETag is required for update operations. Please refresh the page and try again.");
@@ -36,10 +31,8 @@ export function useFamilyFormSubmit(familyId?: string) {
           payload: values,
           etag,
         });
-        console.log("useFamilyFormSubmit - Family update successful:", result);
         return result;
       } catch (error) {
-        console.error("useFamilyFormSubmit - Family update error:", error);
         throw error;
       }
     } else {

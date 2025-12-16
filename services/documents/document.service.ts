@@ -57,7 +57,6 @@ function convertUpdatedAtToETag(updatedAt: string): string {
     
     return etag;
   } catch (error) {
-    console.error("convertUpdatedAtToETag - Error converting updated_at to ETag:", error);
     return "";
   }
 }
@@ -133,23 +132,14 @@ export const DocumentService = {
           // ETag format should be: YYYYMMDDTHHMMSSZ (e.g., "20240120T103000Z")
           etag = String(rawEtag).replace(/^"|"$/g, "").trim();
           
-          // Validate ETag format (should be YYYYMMDDTHHMMSSZ = 16 characters)
           if (etag.length !== 16 || !/^\d{8}T\d{6}Z$/.test(etag)) {
-            console.warn("DocumentService.getById - ETag format may be invalid:", etag, "Expected format: YYYYMMDDTHHMMSSZ");
+            // ETag format may be invalid, but continue anyway
           }
-          
-          console.log("DocumentService.getById - ETag from headers (raw):", rawEtag, "cleaned:", etag);
         }
       }
       
-      // If ETag not in headers, generate it from updated_at field
       if (!etag && response.data?.data?.updated_at) {
         etag = convertUpdatedAtToETag(response.data.data.updated_at);
-        console.log("DocumentService.getById - ETag generated from updated_at:", response.data.data.updated_at, "->", etag);
-      }
-      
-      if (!etag) {
-        console.warn("DocumentService.getById - No ETag found in headers or updated_at field");
       }
       
       return {
@@ -233,12 +223,7 @@ export const DocumentService = {
       // Clean eTag: remove any existing quotes and whitespace
       const cleanEtag = String(etag).replace(/^"|"$/g, "").trim();
       
-      // Use eTag without quotes in If-Match header
       const ifMatchValue = cleanEtag;
-      
-      console.log("DocumentService.update - ETag (raw):", etag, "cleaned:", cleanEtag, "If-Match header:", ifMatchValue);
-      
-      // PATCH endpoint requires JSON (Content-Type: application/json)
       // Build JSON payload, only including fields that are defined
       const jsonPayload: Record<string, any> = {};
       
@@ -280,7 +265,6 @@ export const DocumentService = {
                         (response.headers as any)["ETAG"];
         if (rawEtag) {
           newEtag = String(rawEtag).replace(/^"|"$/g, "").trim();
-          console.log("DocumentService.update - New ETag from response headers:", newEtag);
         }
       }
       
@@ -318,10 +302,7 @@ export const DocumentService = {
       // Clean eTag: remove any existing quotes and whitespace
       const cleanEtag = String(etag).replace(/^"|"$/g, "").trim();
       
-      // Use eTag without quotes in If-Match header
       const ifMatchValue = cleanEtag;
-      
-      console.log("DocumentService.delete - ETag (raw):", etag, "cleaned:", cleanEtag, "If-Match header:", ifMatchValue);
       
       const headers: Record<string, string> = { "If-Match": ifMatchValue };
 
@@ -397,12 +378,7 @@ export const DocumentService = {
       
       const headers: Record<string, string> = {
         "If-Match": ifMatchValue,
-        // Don't set Content-Type - let browser set it with multipart boundary
       };
-
-      const fileName = file instanceof File ? file.name : "blob";
-      const fileSize = file.size;
-      console.log("DocumentService.replaceFile - URL:", `${basePath}/${documentId}/file`, "ETag:", ifMatchValue, "File:", fileName, "Size:", fileSize);
 
       const response = await http.put<FileUploadResponse>(
         `${basePath}/${documentId}/file`,

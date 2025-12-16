@@ -126,20 +126,13 @@ export function DocumentEditFormContainer({
           const updatedEtag = (updateResult as any)?.etag;
           
           if (!updatedEtag) {
-            // Fallback: if eTag not in response headers, refetch (shouldn't happen normally)
-            console.warn("DocumentEditFormContainer - ETag not in update response, refetching...");
-            const updatedDocumentData = await refetchDocument();
-            const fallbackEtag = updatedDocumentData.data?.etag;
-            
-            if (!fallbackEtag) {
-              throw new Error("ETag is required for file replacement. Please try again.");
-            }
-            
-            await DocumentService.replaceFile(documentId, file, fallbackEtag);
-          } else {
-            // Use ETag from update response headers (no GET call needed)
-            await DocumentService.replaceFile(documentId, file, updatedEtag);
+            // If ETag not in response, throw error (shouldn't happen normally)
+            // User can refresh the page and try again
+            throw new Error("ETag is required for file replacement. Please refresh the page and try again.");
           }
+          
+          // Use ETag from update response headers (no GET call needed)
+          await DocumentService.replaceFile(documentId, file, updatedEtag);
         } catch (fileError: unknown) {
           // If file replacement fails, metadata was still updated
           const errorMessage =

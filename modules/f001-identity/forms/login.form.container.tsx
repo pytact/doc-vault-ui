@@ -61,11 +61,8 @@ export function LoginFormContainer() {
       const loggedInUser = response?.data?.user;
       if (loggedInUser?.role) {
         const dashboardRoute = getRoleBasedDashboardRoute(loggedInUser.role);
-        console.log("Login successful - Redirecting to:", dashboardRoute, "for role:", loggedInUser.role);
         router.push(dashboardRoute);
       } else {
-        // Fallback to default dashboard
-        console.warn("No role found in user data, redirecting to default dashboard");
         router.push("/dashboard");
       }
     } catch (err) {

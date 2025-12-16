@@ -37,7 +37,6 @@ function convertUpdatedAtToETag(updatedAt: string): string {
     
     return `${year}${month}${day}T${hours}${minutes}${seconds}Z`;
   } catch (error) {
-    console.error("convertUpdatedAtToETag - Error converting updated_at to ETag:", error);
     return "";
   }
 }
@@ -89,21 +88,12 @@ export const FamilyService = {
                (response.headers as any)["ETAG"];
       }
       
-      // Clean up ETag from header: remove quotes and whitespace
       if (etag) {
         etag = String(etag).replace(/^"|"$/g, "").trim();
-        console.log("FamilyService.getById - ETag from headers:", etag);
       }
       
-      // If ETag not in headers, generate it from updated_at field
       if (!etag && response.data?.data?.updated_at) {
-        console.log("FamilyService.getById - ETag not in headers, generating from updated_at:", response.data.data.updated_at);
         etag = convertUpdatedAtToETag(response.data.data.updated_at);
-        console.log("FamilyService.getById - Generated ETag:", etag);
-      }
-      
-      if (!etag) {
-        console.warn("FamilyService.getById - WARNING: Could not generate ETag from headers or updated_at!");
       }
       
       return {
@@ -111,7 +101,6 @@ export const FamilyService = {
         etag: etag || undefined,
       };
     } catch (error) {
-      console.error("FamilyService.getById - Error:", error);
       throw normalizeAPIError(error);
     }
   },
@@ -144,20 +133,15 @@ export const FamilyService = {
     etag?: string
   ): Promise<FamilyUpdateResponse> => {
     try {
-      // ETag in If-Match header should be wrapped in quotes per HTTP spec
-      const ifMatchValue = etag ? `"${etag}"` : undefined;
-      const headers = ifMatchValue ? { "If-Match": ifMatchValue } : {};
+      const headers = etag ? { "If-Match": etag } : {};
       const url = `${basePath}/${familyId}`;
-      console.log("FamilyService.update - URL:", url, "Payload:", payload, "ETag (raw):", etag, "If-Match header:", ifMatchValue, "Headers:", headers);
       const response = await http.patch<FamilyUpdateResponse>(
         url,
         payload,
         { headers }
       );
-      console.log("FamilyService.update - Response:", response.data);
       return response.data;
     } catch (error) {
-      console.error("FamilyService.update - Error:", error);
       throw normalizeAPIError(error);
     }
   },
@@ -176,19 +160,15 @@ export const FamilyService = {
         throw new Error("ETag is required for delete operations");
       }
 
-      // ETag in If-Match header (without quotes)
       const headers = { "If-Match": etag };
       const url = `${basePath}/${familyId}`;
 
-      console.log("FamilyService.delete - URL:", url, "ETag:", etag, "Headers:", headers);
       const response = await http.delete<FamilySoftDeleteResponse>(
         url,
         { headers }
       );
-      console.log("FamilyService.delete - Response:", response.data);
       return response.data;
     } catch (error) {
-      console.error("FamilyService.delete - Error:", error);
       throw normalizeAPIError(error);
     }
   },

@@ -34,7 +34,6 @@ export function Header({ role }: HeaderProps) {
         router.replace(authRoutes.login);
       }
     } catch (error) {
-      console.error("Logout failed:", error);
       // Even if logout fails, redirect to login without redirect parameter
       if (typeof window !== "undefined") {
         window.location.href = authRoutes.login;

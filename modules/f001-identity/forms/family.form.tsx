@@ -58,18 +58,13 @@ export function FamilyForm({
 
   const handleSubmit = form.handleSubmit(
     async (data) => {
-    console.log("FamilyForm.handleSubmit - Form data:", data);
     try {
       await onSubmit(data);
     } catch (error) {
-      console.error("FamilyForm.handleSubmit - Error:", error);
-        // Re-throw error so container can handle it properly
         throw error;
     }
     },
     (errors) => {
-      // Handle validation errors
-      console.error("FamilyForm validation errors:", errors);
     }
   );
 

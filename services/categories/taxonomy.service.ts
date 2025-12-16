@@ -50,14 +50,17 @@ export const TaxonomyService = {
    * Get category by ID (extracted from taxonomy list)
    * 
    * NOTE: The API does not have a dedicated GET /v1/categories/{id} endpoint.
-   * This function fetches the complete taxonomy and filters for the requested category.
+   * This function should use cached taxonomy data from React Query instead of making a new API call.
+   * Use the hook useTaxonomyData().getCategoryById() instead of this service method.
    * 
+   * @deprecated Use useTaxonomyData().getCategoryById() instead to avoid unnecessary API calls
    * @param categoryId - Category UUID
    * @returns Category with nested subcategories, or undefined if not found
    */
   getById: async (categoryId: string): Promise<CategoryResponse | undefined> => {
     try {
       // Fetch complete taxonomy
+      // NOTE: This makes an unnecessary API call. Use React Query cached data instead via useTaxonomyData hook
       const taxonomyResponse = await TaxonomyService.list();
       
       // Find category by ID

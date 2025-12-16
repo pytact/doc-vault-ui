@@ -37,7 +37,6 @@ function convertUpdatedAtToETag(updatedAt: string): string {
     
     return `${year}${month}${day}T${hours}${minutes}${seconds}Z`;
   } catch (error) {
-    console.error("convertUpdatedAtToETag - Error converting updated_at to ETag:", error);
     return "";
   }
 }
@@ -128,11 +127,8 @@ export const UserService = {
         etag = String(etag).replace(/^"|"$/g, "").trim();
       }
       
-      // If ETag not in headers, generate it from updated_at field
       if (!etag && response.data?.data?.updated_at) {
-        console.log("UserService.getById - ETag not in headers, generating from updated_at:", response.data.data.updated_at);
         etag = convertUpdatedAtToETag(response.data.data.updated_at);
-        console.log("UserService.getById - Generated ETag:", etag);
       }
       
       return {
@@ -166,37 +162,34 @@ export const UserService = {
         frontend_url: frontendUrl,
       };
       
-      console.log("UserService.invite - Request payload:", requestPayload);
-      console.log("UserService.invite - Role ID being sent:", requestPayload.role_id);
-      
       const response = await http.post<InvitationCreateResponse>(
         `/v1/invite`,
         requestPayload
       );
-      console.log("UserService.invite - Response:", response.data);
       return response.data;
     } catch (error) {
-      console.error("UserService.invite - Error:", error);
       throw normalizeAPIError(error);
     }
   },
 
   /**
-   * Soft delete user
-   * PATCH /v1/families/{family_id}/users/{user_id}/soft-delete
+   * Delete user (soft delete)
+   * DELETE /v1/families/{family_id}/users/{user_id}
    */
-  softDelete: async (
+  delete: async (
     familyId: string,
     userId: string,
     etag?: string
   ): Promise<UserSoftDeleteResponse> => {
     try {
-      // ETag in If-Match header should be wrapped in quotes per HTTP spec
-      const ifMatchValue = etag ? `"${etag}"` : undefined;
-      const headers = ifMatchValue ? { "If-Match": ifMatchValue } : {};
-      const response = await http.patch<UserSoftDeleteResponse>(
-        `${basePath}/${familyId}/users/${userId}/soft-delete`,
-        {},
+      if (!etag) {
+        throw new Error("ETag is required for delete operations");
+      }
+
+      // ETag in If-Match header (without quotes)
+      const headers = { "If-Match": etag };
+      const response = await http.delete<UserSoftDeleteResponse>(
+        `${basePath}/${familyId}/users/${userId}`,
         { headers }
       );
       return response.data;
@@ -221,20 +214,15 @@ export const UserService = {
         throw new Error("ETag is required for role update operations");
       }
 
-      // ETag in If-Match header should be wrapped in quotes per HTTP spec
-      const ifMatchValue = `"${etag}"`;
-      const headers = { "If-Match": ifMatchValue };
+      const headers = { "If-Match": etag };
 
-      console.log("UserService.updateRoles - URL:", `/v1/roles/families/${familyId}/users/${userId}/`, "Payload:", payload, "ETag (raw):", etag, "If-Match header:", ifMatchValue, "Headers:", headers);
       const response = await http.patch<UserRoleUpdateResponse>(
         `/v1/roles/families/${familyId}/users/${userId}/`,
         payload,
         { headers }
       );
-      console.log("UserService.updateRoles - Response:", response.data);
       return response.data;
     } catch (error) {
-      console.error("UserService.updateRoles - Error:", error);
       throw normalizeAPIError(error);
     }
   },

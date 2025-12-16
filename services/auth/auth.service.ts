@@ -66,8 +66,6 @@ export const AuthService = {
               permissions: permissions,
             };
             
-            console.log("User profile fetched - Role:", roleString, "Route:", roleString === "superadmin" ? "/superadmin/dashboard" : "/dashboard");
-            
             // Store updated user data in sessionStorage
             sessionStorage.setItem(
               sessionStorageKeys.user,
@@ -77,7 +75,6 @@ export const AuthService = {
         } catch (profileError) {
           // If /users/me fails, continue with login response data
           // Role should still be available from login response
-          console.warn("Failed to fetch user profile after login:", profileError);
         }
       }
 

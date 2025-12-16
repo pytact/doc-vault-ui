@@ -14,20 +14,17 @@ import type { ChangePasswordFormSchema } from "./changePassword.schema";
  */
 export function useChangePasswordFormSubmit() {
   const changePasswordMutation = useChangePassword();
-  const { data: profileData, refetch: refetchProfile } = useProfile();
+  const { data: profileData } = useProfile();
 
   async function submit(values: ChangePasswordFormSchema) {
-    // Refetch profile data to get the latest ETag before password change
-    const freshProfileData = await refetchProfile();
-    
-    // Get ETag from fresh profile data or cached data
-    const etag = freshProfileData.data?.etag || profileData?.etag;
+    // Use existing ETag from already-loaded profile data (no refetch needed)
+    const etag = profileData?.etag;
     if (!etag) {
       throw new Error("ETag is required for password change. Please refresh the page and try again.");
     }
 
     // Get current name from profile data to include in update (prevents name from being changed)
-    const currentName = freshProfileData.data?.data?.data?.name || profileData?.data?.data?.name;
+    const currentName = profileData?.data?.data?.name;
     if (!currentName) {
       throw new Error("Could not retrieve current profile name. Please refresh the page and try again.");
     }

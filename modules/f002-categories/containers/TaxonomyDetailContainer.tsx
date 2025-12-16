@@ -11,7 +11,7 @@
 
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useGetTaxonomy } from "../hooks/useTaxonomy";
+import { useTaxonomyData } from "../hooks/useTaxonomyData";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,16 +21,19 @@ import Link from "next/link";
 /**
  * Taxonomy detail container component
  * Handles business logic and displays category details
+ * 
+ * Uses cached taxonomy data from useTaxonomyData to avoid unnecessary API calls
  */
 export function TaxonomyDetailContainer() {
   const params = useParams();
   const router = useRouter();
   const categoryId = params?.id as string;
 
-  const { data: category, isLoading, error } = useGetTaxonomy(
-    categoryId,
-    !!categoryId
-  );
+  // Use cached taxonomy data instead of making a separate API call
+  const { getCategoryById, isLoading, error } = useTaxonomyData();
+  const category = React.useMemo(() => {
+    return categoryId ? getCategoryById(categoryId) : undefined;
+  }, [categoryId, getCategoryById]);
 
   const handleBackToList = React.useCallback(() => {
     router.push(taxonomyRoutes.list);

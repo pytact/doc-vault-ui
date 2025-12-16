@@ -74,32 +74,18 @@ export function FamilyDetailContainer() {
     familyStatus: familyData?.data?.data?.status || null,
   });
 
-  // Debug: Log permissions
-  React.useEffect(() => {
-    console.log("Family Detail - Permissions:", {
-      userRole: user?.role,
-      userPermissions: user?.permissions,
-      familyStatus: familyData?.data?.data?.status,
-      canEditFamily,
-      canSoftDeleteFamily,
-      etag: familyData?.etag,
-    });
-  }, [user?.role, user?.permissions, familyData?.data?.data?.status, canEditFamily, canSoftDeleteFamily, familyData?.etag]);
   const editModal = useModalState();
   const deleteModal = useModalState();
   const inviteModal = useModalState();
   const deleteFamilyMutation = useDeleteFamily();
 
-  // All hooks must be called before any conditional returns
   const handleEditFamily = useCallback(() => {
-    console.log("FamilyDetailContainer - Edit button clicked", { familyId, etag: familyData?.etag });
     editModal.open();
-  }, [editModal, familyId, familyData?.etag]);
+  }, [editModal]);
 
   const handleDelete = useCallback(() => {
-    console.log("FamilyDetailContainer - Delete button clicked", { familyId, etag: familyData?.etag });
     deleteModal.open();
-  }, [deleteModal, familyId, familyData?.etag]);
+  }, [deleteModal]);
 
   const handleInviteUser = useCallback(() => {
     inviteModal.open();
@@ -111,7 +97,6 @@ export function FamilyDetailContainer() {
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!familyId) {
-      console.error("FamilyDetailContainer - No familyId provided for delete");
       addNotification({
         type: "error",
         message: "Family ID is missing. Please refresh the page and try again.",
@@ -120,13 +105,9 @@ export function FamilyDetailContainer() {
       return;
     }
     
-    // Use existing ETag from already-loaded family data (no refetch needed)
     const etag = familyData?.etag;
     
-    console.log("FamilyDetailContainer - Delete confirm called", { familyId, etag });
-    
     if (!etag) {
-      console.error("FamilyDetailContainer - ETag missing for delete operation");
       addNotification({
         type: "error",
         message: "ETag is required for delete operations. Please refresh the page and try again.",
@@ -136,9 +117,7 @@ export function FamilyDetailContainer() {
     }
     
     try {
-      console.log("FamilyDetailContainer - Calling delete mutation with ETag", { familyId, etag });
       await deleteFamilyMutation.mutateAsync({ familyId, etag });
-      console.log("FamilyDetailContainer - Delete mutation successful");
       addNotification({
         type: "success",
         message: "Family deleted successfully",
@@ -147,8 +126,6 @@ export function FamilyDetailContainer() {
       deleteModal.close();
       router.push(familyRoutes.list);
     } catch (error: any) {
-      console.error("FamilyDetailContainer - Delete mutation error:", error);
-      
       // Check if it's a PRECONDITION_FAILED error (ETag mismatch)
       if (error?.error?.code === "PRECONDITION_FAILED" || 
           error?.response?.data?.error?.code === "PRECONDITION_FAILED") {

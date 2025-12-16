@@ -36,6 +36,8 @@ export function useListTaxonomy(params?: TaxonomyListParams) {
     gcTime: Infinity, // Keep in cache indefinitely since data never changes
     refetchOnWindowFocus: false, // No need to refetch immutable data
     placeholderData: keepPreviousData, // Keep previous data while refetching (if ever needed)
+    // Fetch eagerly when component mounts (no need to wait for user interaction)
+    enabled: true,
   });
 }
 
@@ -43,8 +45,13 @@ export function useListTaxonomy(params?: TaxonomyListParams) {
  * Get category by ID query hook
  * 
  * NOTE: The API does not have a dedicated GET /v1/categories/{id} endpoint.
- * This hook uses the taxonomy list and filters for the requested category.
+ * This hook uses the cached taxonomy list and filters for the requested category.
  * 
+ * IMPORTANT: This hook should use the cached taxonomy data from useListTaxonomy
+ * instead of making a separate API call. Prefer using useTaxonomyData().getCategoryById()
+ * which uses cached data.
+ * 
+ * @deprecated Use useTaxonomyData().getCategoryById() instead to avoid unnecessary API calls
  * @param categoryId - Category UUID
  * @param enabled - Whether the query should run (defaults to true if categoryId is provided)
  * @returns React Query result with category data or undefined
@@ -57,6 +64,8 @@ export function useGetTaxonomy(
     queryKey: ["taxonomy", "category", categoryId],
     queryFn: async () => {
       if (!categoryId) return undefined;
+      // NOTE: This makes an unnecessary API call via TaxonomyService.getById
+      // Use useTaxonomyData().getCategoryById() instead which uses cached data
       return TaxonomyService.getById(categoryId);
     },
     enabled: enabled && !!categoryId, // Only run if categoryId is provided and enabled

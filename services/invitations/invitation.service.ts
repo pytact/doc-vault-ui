@@ -52,16 +52,12 @@ export const InvitationService = {
     token: string
   ): Promise<InvitationValidationResponse> => {
     try {
-      // URL encode the token to handle special characters
       const encodedToken = encodeURIComponent(token);
-      console.log("InvitationService.validate - Token:", token, "Encoded:", encodedToken);
       const response = await http.get<InvitationValidationResponse>(
         `/v1/invitations/${encodedToken}`
       );
-      console.log("InvitationService.validate - Response:", response.data);
       return response.data;
     } catch (error) {
-      console.error("InvitationService.validate - Error:", error);
       throw normalizeAPIError(error);
     }
   },

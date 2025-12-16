@@ -53,8 +53,6 @@ export function InviteUserFormContainer({
 
   const handleSubmit = async (values: InviteUserFormSchema) => {
     try {
-      console.log("InviteUserFormContainer - Submitting invite with values:", values);
-      console.log("InviteUserFormContainer - Role ID:", values.role_id);
       await submit(values);
       addNotification({
         type: "success",

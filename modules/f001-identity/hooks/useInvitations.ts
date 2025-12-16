@@ -46,7 +46,6 @@ export function useValidateInvitation(token: string | null) {
     queryKey: ["invitation", "validate", token],
     queryFn: () => {
       if (!token) throw new Error("Token is required");
-      console.log("useValidateInvitation - Calling validate with token:", token);
       return InvitationService.validate(token);
     },
     enabled: !!token,

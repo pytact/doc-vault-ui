@@ -55,7 +55,6 @@ export function createHttpClient(apiBaseUrl: string): AxiosInstance {
       if (config.method?.toLowerCase() === 'patch' && config.headers) {
         const ifMatchHeader = (config.headers as any)['If-Match'] || (config.headers as any)['if-match'];
         if (ifMatchHeader) {
-          console.log('HTTP Client - PATCH request with If-Match header:', ifMatchHeader);
         }
       }
       

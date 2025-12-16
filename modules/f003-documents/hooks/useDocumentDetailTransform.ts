@@ -176,27 +176,16 @@ export function useDocumentDetailTransform(
 
   const canDelete = useMemo(() => {
     if (!document) {
-      console.log("useDocumentDetailTransform.canDelete - No document");
       return false;
     }
     if (document.is_del) {
-      console.log("useDocumentDetailTransform.canDelete - Document is deleted");
       return false;
     }
-    // Owner, Editor, and FamilyAdmin can delete documents
-    // Members with owner permission can delete their own documents
-    // FamilyAdmin can delete any document
     const hasOwnerPermission = document.permission === "owner";
     const hasEditorPermission = document.permission === "editor";
     const isFamilyAdmin = currentUserRole === "familyadmin";
     
-    const canDeleteResult = hasOwnerPermission || hasEditorPermission || isFamilyAdmin;
-    
-    console.log("useDocumentDetailTransform.canDelete - Check:", {
-      documentPermission: document.permission,
-      currentUserRole,
-      hasOwnerPermission,
-      hasEditorPermission,
+    return hasOwnerPermission || hasEditorPermission || isFamilyAdmin;
       isFamilyAdmin,
       canDelete: canDeleteResult,
     });

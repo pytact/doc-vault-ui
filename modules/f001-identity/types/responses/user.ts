@@ -92,8 +92,8 @@ export interface UserDetailResponseWrapper {
 }
 
 /**
- * User Soft Delete Response
- * PATCH /v1/families/{family_id}/users/{user_id}/soft-delete
+ * User Delete Response
+ * DELETE /v1/families/{family_id}/users/{user_id}
  */
 export interface UserSoftDeleteResponse {
   data: UserDetailResponse;

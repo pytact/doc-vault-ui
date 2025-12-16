@@ -9,6 +9,7 @@
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { FamilyForm } from "./family.form";
 import {
   FamilySchema,
@@ -36,7 +37,8 @@ export function FamilyFormContainer({
   onCancel,
 }: FamilyFormContainerProps) {
   const { addNotification } = useNotificationContext();
-  const { data: familyData, isLoading: familyLoading, refetch: refetchFamily } = useFamily(familyId || null);
+  const queryClient = useQueryClient();
+  const { data: familyData, isLoading: familyLoading } = useFamily(familyId || null);
   const { submit, isLoading, error } = useFamilyFormSubmit(familyId);
 
   const form = useForm<FamilyFormSchema>({
@@ -60,15 +62,8 @@ export function FamilyFormContainer({
   }, [error, form.setError]);
 
   const handleSubmit = async (values: FamilyFormSchema) => {
-    console.log("FamilyFormContainer.handleSubmit - Called with values:", values, "familyId:", familyId);
-    console.log("FamilyFormContainer - Family data:", familyData);
-    console.log("FamilyFormContainer - ETag:", familyData?.etag);
-    console.log("FamilyFormContainer - Family loading:", familyLoading);
-    
-    // For update operations, ensure we have family data and ETag
     if (familyId) {
       if (familyLoading) {
-        console.error("FamilyFormContainer - Family data still loading");
         addNotification({
           type: "error",
           message: "Please wait for family data to load before updating.",
@@ -77,30 +72,18 @@ export function FamilyFormContainer({
         return;
       }
       
-      // Refetch to get the latest ETag before update
-      console.log("FamilyFormContainer - Refetching family data to get latest ETag before update...");
-      try {
-        const freshData = await refetchFamily();
-        console.log("FamilyFormContainer - Fresh ETag:", freshData.data?.etag);
-        
-        if (!freshData.data?.etag) {
-          console.error("FamilyFormContainer - ETag missing after refetch");
-          addNotification({
-            type: "error",
-            message: "ETag is required for update operations. Please refresh the page and try again.",
-            title: "Update Failed",
-          });
-          return;
-        }
-      } catch (refetchError) {
-        console.error("FamilyFormContainer - Error refetching family data:", refetchError);
-        // Continue with existing ETag if refetch fails
+      if (!familyData?.etag) {
+        addNotification({
+          type: "error",
+          message: "ETag is required for update operations. Please refresh the page and try again.",
+          title: "Update Failed",
+        });
+        return;
       }
     }
     
     try {
-      const result = await submit(values);
-      console.log("Family form submit result:", result);
+      await submit(values);
       addNotification({
         type: "success",
         message: familyId
@@ -114,8 +97,6 @@ export function FamilyFormContainer({
         onSuccess?.();
       }, 100);
     } catch (err: any) {
-      console.error("Family form submit error:", err);
-      
       // Check if it's a PRECONDITION_FAILED error (ETag mismatch)
       if (err?.error?.code === "PRECONDITION_FAILED" || 
           err?.response?.data?.error?.code === "PRECONDITION_FAILED") {
@@ -124,8 +105,8 @@ export function FamilyFormContainer({
           message: "The family was modified by another user. Please refresh the page and try again.",
           title: "Resource Modified",
         });
-        // Refetch to update the form with latest data
-        await refetchFamily();
+        // Invalidate query to trigger refetch on next access (no immediate refetch)
+        queryClient.invalidateQueries({ queryKey: ["family", familyId] });
       } else {
       const errorMessage =
         err instanceof Error

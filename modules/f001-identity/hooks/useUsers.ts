@@ -119,8 +119,8 @@ export function useInviteUser() {
 }
 
 /**
- * Soft delete user mutation hook
- * PATCH /v1/families/{family_id}/users/{user_id}/soft-delete
+ * Delete user mutation hook
+ * DELETE /v1/families/{family_id}/users/{user_id}
  */
 export function useSoftDeleteUser() {
   const queryClient = useQueryClient();
@@ -134,7 +134,7 @@ export function useSoftDeleteUser() {
       familyId: string;
       userId: string;
       etag?: string;
-    }) => UserService.softDelete(familyId, userId, etag),
+    }) => UserService.delete(familyId, userId, etag),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["users", variables.familyId] });
       queryClient.invalidateQueries({ queryKey: ["users", "all"] }); // Also invalidate all users list

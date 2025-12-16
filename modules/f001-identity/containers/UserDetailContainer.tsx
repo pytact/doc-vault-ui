@@ -33,10 +33,7 @@ export function UserDetailContainer() {
   const { user } = useAuthContext();
   const { familyId: familyIdFromContext } = useFamilyContext();
   
-  // Use familyId from URL params (for SuperAdmin) or from context (for FamilyAdmin)
   const familyId = familyIdFromParams || familyIdFromContext;
-  
-  console.log("UserDetailContainer - Params:", { userId, familyIdFromParams, familyIdFromContext, familyId });
   
   const { data: userData, isLoading, refetch: refetchUser, error: userError } = useUser(familyId || null, userId);
   const { currentFamily } = useFamilyContext();
@@ -68,18 +65,6 @@ export function UserDetailContainer() {
     targetUserId: userDetail?.id || null,
     familyStatus: familyStatus,
     targetUserRole: targetUserRole, // Pass target user's role to check if FamilyAdmin is managing SuperAdmin
-  });
-
-  // Debug logging for permissions
-  console.log("UserDetailContainer - Permissions:", {
-    currentUserRole: user?.role,
-    currentUserId: user?.id,
-    targetUserStatus: userDetail?.status,
-    targetUserId: userDetail?.id,
-    targetUserRole: targetUserRole,
-    familyStatus: familyStatus,
-    canManageUserRoles,
-    canSoftDeleteUser,
   });
 
   // ALL useCallback HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
@@ -133,18 +118,7 @@ export function UserDetailContainer() {
       }
 
       try {
-        // Refetch user data to get the latest ETag before role update
-        console.log("UserDetailContainer - Refetching user data to get latest ETag...");
-        const freshUserData = await refetchUser();
-        
-        // Get ETag from fresh user data or cached data
-        const etag = freshUserData.data?.etag || userData?.etag;
-        
-        console.log("UserDetailContainer - ETag values:", {
-          freshFromRefetch: freshUserData.data?.etag,
-          cached: userData?.etag,
-          using: etag
-        });
+        const etag = userData?.etag;
         
         if (!etag) {
           addNotification({
@@ -155,14 +129,12 @@ export function UserDetailContainer() {
           return;
         }
 
-        console.log("UserDetailContainer - Calling role update mutation with ETag in header", { familyId, userId, roleIds, etag });
         await updateRolesMutation.mutateAsync({
           familyId,
           userId,
           payload: { role_ids: roleIds },
-          etag: etag, // ETag is passed in If-Match header
+          etag: etag,
         });
-        console.log("UserDetailContainer - Role update mutation successful");
         addNotification({
           type: "success",
           message: "User roles updated successfully",
@@ -170,8 +142,6 @@ export function UserDetailContainer() {
         });
         manageRolesModal.close();
       } catch (err: any) {
-        console.error("UserDetailContainer - Role update error:", err);
-        
         // Check if it's a PRECONDITION_FAILED error (ETag mismatch)
         if (err?.error?.code === "PRECONDITION_FAILED" ||
             err?.response?.data?.error?.code === "PRECONDITION_FAILED") {
@@ -193,7 +163,7 @@ export function UserDetailContainer() {
         }
       }
     },
-    [familyId, userId, userData?.etag, refetchUser, updateRolesMutation, addNotification, manageRolesModal, user?.role, targetUserRole, rolesData?.data?.items]
+    [familyId, userId, userData?.etag, updateRolesMutation, addNotification, manageRolesModal, user?.role, targetUserRole, rolesData?.data?.items]
   );
 
   const handleConfirmSoftDelete = useCallback(async () => {
@@ -262,9 +232,7 @@ export function UserDetailContainer() {
   }, [rolesData?.data?.items, user?.role]);
 
   // NOW we can do conditional returns AFTER all hooks are called
-  // If familyId is missing, show error (API requires family_id)
   if (!familyId && !isLoading) {
-    console.error("UserDetailContainer - Family ID is required but not available");
     return (
       <div className="p-4">
         <div className="text-red-600 font-semibold">Error: Family ID Required</div>
@@ -283,7 +251,6 @@ export function UserDetailContainer() {
   }
 
   if (userError) {
-    console.error("UserDetailContainer - User fetch error:", userError);
     return (
       <div className="p-4">
         <div className="text-red-600 font-semibold">Error Loading User</div>

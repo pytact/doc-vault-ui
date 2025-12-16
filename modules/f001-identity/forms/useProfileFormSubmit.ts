@@ -16,7 +16,7 @@ import type { UserProfileUpdateRequest } from "../types/requests/user";
  */
 export function useProfileFormSubmit() {
   const updateMutation = useUpdateProfile();
-  const { data: profileData, refetch: refetchProfile } = useProfile();
+  const { data: profileData } = useProfile();
   const { user } = useAuthContext();
 
   async function submit(values: ProfileFormSchema) {
@@ -25,22 +25,12 @@ export function useProfileFormSubmit() {
       throw new Error("User ID is required. Please log in again.");
     }
     
-    // Refetch profile data to get the latest ETag before update
-    const freshProfileData = await refetchProfile();
-    
-    // Get ETag from fresh profile data or cached data
-    // React Query refetch returns { data: { data: ProfileGetResponse, etag: string } }
-    const etag = freshProfileData.data?.etag || profileData?.etag;
+    // Use existing ETag from already-loaded profile data (no refetch needed)
+    const etag = profileData?.etag;
     
     if (!etag) {
-      console.error("useProfileFormSubmit - ETag missing:", {
-        freshProfileData: freshProfileData.data,
-        cachedProfileData: profileData,
-      });
       throw new Error("ETag is required for update operations. Please refresh the page and try again.");
     }
-    
-    console.log("useProfileFormSubmit - Using ETag for update:", etag);
     
     // Build payload - only name is updated (password change is separate)
     // ETag is sent in If-Match header, not in payload
