@@ -7,12 +7,10 @@ import { httpClient as http } from "@/lib/http";
 import { normalizeAPIError } from "@/core/http/normalizers/error-normalizer";
 import {
   UserProfileUpdateRequest,
-  UserPasswordChangeRequest,
 } from "@/modules/f001-identity/types/requests/user";
 import {
   ProfileGetResponse,
   ProfileUpdateResponse,
-  PasswordChangeResponse,
 } from "@/modules/f001-identity/types/responses/profile";
 
 const basePath = "/v1/users/me";
@@ -50,12 +48,25 @@ export const ProfileService = {
       const response = await http.get<ProfileGetResponse>(basePath);
       
       // Try to get ETag from response headers first
+      // Axios normalizes headers to lowercase, so check lowercase first
       let etag: string | undefined;
       
       if (response.headers) {
+        // Check all possible case variations (Axios may normalize to lowercase)
         etag = (response.headers as any)["etag"] || 
                (response.headers as any)["ETag"] ||
-               (response.headers as any)["ETAG"];
+               (response.headers as any)["ETAG"] ||
+               (response.headers as any).get?.("etag") ||
+               (response.headers as any).get?.("ETag");
+        
+        // If still not found, try iterating through headers
+        if (!etag && typeof response.headers === 'object') {
+          const headerKeys = Object.keys(response.headers);
+          const etagKey = headerKeys.find(key => key.toLowerCase() === 'etag');
+          if (etagKey) {
+            etag = (response.headers as any)[etagKey];
+          }
+        }
       }
       
       // Clean up ETag from header: remove quotes and whitespace
@@ -103,7 +114,6 @@ export const ProfileService = {
 
       // ETag in If-Match header should be wrapped in quotes per HTTP spec
       const ifMatchValue = `"${etag}"`;
-      const headers = { "If-Match": ifMatchValue };
 
       // Build payload - include user_id and name
       const requestPayload: UserProfileUpdateRequest & { user_id: string } = {
@@ -117,6 +127,11 @@ export const ProfileService = {
         requestPayload.current_password = payload.current_password;
       }
 
+      // Set headers explicitly - ensure If-Match header is sent
+      const headers: Record<string, string> = {
+        "If-Match": ifMatchValue,
+      };
+
       console.log("ProfileService.update - URL:", `/v1/users/${userId}`, "Payload:", requestPayload, "ETag (raw):", etag, "If-Match header:", ifMatchValue, "Headers:", headers);
       const response = await http.patch<ProfileUpdateResponse>(
         `/v1/users/${userId}`,
@@ -127,34 +142,6 @@ export const ProfileService = {
       return response.data;
     } catch (error) {
       console.error("ProfileService.update - Error:", error);
-      throw normalizeAPIError(error);
-    }
-  },
-
-  /**
-   * Change password
-   * POST /v1/users/me/password/change
-   * ETag is passed in the If-Match header
-   */
-  changePassword: async (
-    payload: UserPasswordChangeRequest,
-    etag?: string
-  ): Promise<PasswordChangeResponse> => {
-    try {
-      // ETag in If-Match header should be wrapped in quotes per HTTP spec
-      const ifMatchValue = etag ? `"${etag}"` : undefined;
-      const headers = ifMatchValue ? { "If-Match": ifMatchValue } : {};
-      
-      console.log("ProfileService.changePassword - URL:", `${basePath}/password/change`, "ETag (raw):", etag, "If-Match header:", ifMatchValue, "Headers:", headers);
-      const response = await http.post<PasswordChangeResponse>(
-        `${basePath}/password/change`,
-        payload,
-        { headers }
-      );
-      console.log("ProfileService.changePassword - Response:", response.data);
-      return response.data;
-    } catch (error) {
-      console.error("ProfileService.changePassword - Error:", error);
       throw normalizeAPIError(error);
     }
   },

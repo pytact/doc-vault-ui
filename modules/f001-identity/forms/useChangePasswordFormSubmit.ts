@@ -26,10 +26,17 @@ export function useChangePasswordFormSubmit() {
       throw new Error("ETag is required for password change. Please refresh the page and try again.");
     }
 
+    // Get current name from profile data to include in update (prevents name from being changed)
+    const currentName = freshProfileData.data?.data?.data?.name || profileData?.data?.data?.name;
+    if (!currentName) {
+      throw new Error("Could not retrieve current profile name. Please refresh the page and try again.");
+    }
+
     return await changePasswordMutation.mutateAsync({
       current_password: values.current_password,
       new_password: values.new_password,
       etag,
+      currentName,
     });
   }
 

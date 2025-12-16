@@ -12,14 +12,16 @@ import { RouteGuard } from "@/core/guards/route-guard";
 import { UserRole } from "@/modules/f001-identity/types/responses/auth";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import Link from "next/link";
-import { userRoutes, profileRoutes } from "@/utils/routing";
+import { userRoutes, profileRoutes, documentRoutes } from "@/utils/routing";
 import { useUserList } from "@/modules/f001-identity/hooks/useUsers";
 import { useFamilyContext } from "@/contexts/family.context";
+import { useListDocuments } from "@/modules/f003-documents/hooks/useDocuments";
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
   const { familyId } = useFamilyContext();
   const { data: usersData, isLoading: usersLoading } = useUserList(familyId || null);
+  const { data: documentsData, isLoading: documentsLoading } = useListDocuments();
 
   // Calculate statistics for FamilyAdmin
   const totalUsers = usersData?.data?.total || 0;
@@ -28,6 +30,12 @@ export default function DashboardPage() {
   ).length;
   const pendingUsers = (usersData?.data?.items || []).filter(
     (u) => u.status === "PendingActivation"
+  ).length;
+  
+  // Calculate document statistics
+  const totalDocuments = documentsData?.data?.total || 0;
+  const documentsWithFiles = (documentsData?.data?.items || []).filter(
+    (doc) => doc.file_path !== null
   ).length;
 
   return (
@@ -86,6 +94,66 @@ export default function DashboardPage() {
                   View All Users
                 </Link>
               )}
+              <Link
+                href={documentRoutes.list}
+                className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                View Documents
+              </Link>
+            </CardBody>
+          </Card>
+
+          {/* Documents Section */}
+          <Card variant="elevated" className="border-l-4 border-l-primary-500">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary-100 p-2">
+                  <svg
+                    className="h-6 w-6 text-primary-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-slate-900">Documents</h2>
+              </div>
+            </CardHeader>
+            <CardBody className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-slate-600">Total Documents</p>
+                {documentsLoading ? (
+                  <p className="mt-1 text-lg font-semibold text-primary-600">Loading...</p>
+                ) : (
+                  <p className="mt-1 text-lg font-semibold text-primary-600">{totalDocuments}</p>
+                )}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600">With Files</p>
+                {documentsLoading ? (
+                  <p className="mt-1 text-sm text-slate-500">Loading...</p>
+                ) : (
+                  <p className="mt-1 text-sm text-slate-500">{documentsWithFiles} documents have PDF files</p>
+                )}
+              </div>
+              <Link
+                href={documentRoutes.list}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Manage Documents
+              </Link>
             </CardBody>
           </Card>
 

@@ -13,7 +13,7 @@ import { useAuthContext } from "@/contexts/auth.context";
 import { Button } from "@/components/ui/button";
 import { UserRole } from "@/modules/f001-identity/types/responses/auth";
 import { getRoleBasedDashboardRoute } from "@/utils/routing";
-import { authRoutes, profileRoutes, userRoutes, familyRoutes } from "@/utils/routing";
+import { authRoutes, profileRoutes, userRoutes, familyRoutes, documentRoutes } from "@/utils/routing";
 
 interface HeaderProps {
   role?: UserRole;
@@ -27,9 +27,20 @@ export function Header({ role }: HeaderProps) {
   const handleLogout = async () => {
     try {
       await logout();
-      router.push(authRoutes.login);
+      // Use window.location.href for hard redirect to avoid redirect query parameters
+      if (typeof window !== "undefined") {
+        window.location.href = authRoutes.login;
+      } else {
+        router.replace(authRoutes.login);
+      }
     } catch (error) {
       console.error("Logout failed:", error);
+      // Even if logout fails, redirect to login without redirect parameter
+      if (typeof window !== "undefined") {
+        window.location.href = authRoutes.login;
+      } else {
+        router.replace(authRoutes.login);
+      }
     }
   };
 
@@ -50,11 +61,13 @@ export function Header({ role }: HeaderProps) {
         return [
           { href: "/dashboard", label: "Dashboard" },
           { href: userRoutes.list, label: "Users" },
+          { href: documentRoutes.list, label: "Documents" },
           { href: profileRoutes.settings, label: "Profile" },
         ];
       case "member":
         return [
           { href: "/dashboard", label: "Dashboard" },
+          { href: documentRoutes.list, label: "Documents" },
           { href: profileRoutes.settings, label: "Profile" },
         ];
       default:

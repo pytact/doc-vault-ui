@@ -249,6 +249,18 @@ export function UserDetailContainer() {
     }
   }, [familyId, userId, userData?.etag, softDeleteMutation, addNotification, softDeleteModal, router, familyIdFromParams]);
 
+  // ALL useMemo HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // Filter out SuperAdmin role if current user is FamilyAdmin
+  // FamilyAdmin should not be able to assign SuperAdmin role to any user
+  const availableRoles = React.useMemo(() => {
+    const allRoles = rolesData?.data?.items || [];
+    if (user?.role === "familyadmin") {
+      // FamilyAdmin cannot assign SuperAdmin role
+      return allRoles.filter((role) => role.name.toLowerCase() !== "superadmin");
+    }
+    return allRoles;
+  }, [rolesData?.data?.items, user?.role]);
+
   // NOW we can do conditional returns AFTER all hooks are called
   // If familyId is missing, show error (API requires family_id)
   if (!familyId && !isLoading) {
@@ -288,17 +300,6 @@ export function UserDetailContainer() {
 
   // Safe to use userDetail now - all hooks called and early returns handled
   const currentRoleIds = userDetail.roles_list?.map((role: { id: string }) => role.id) || [];
-  
-  // Filter out SuperAdmin role if current user is FamilyAdmin
-  // FamilyAdmin should not be able to assign SuperAdmin role to any user
-  const availableRoles = React.useMemo(() => {
-    const allRoles = rolesData?.data?.items || [];
-    if (user?.role === "familyadmin") {
-      // FamilyAdmin cannot assign SuperAdmin role
-      return allRoles.filter((role) => role.name.toLowerCase() !== "superadmin");
-    }
-    return allRoles;
-  }, [rolesData?.data?.items, user?.role]);
 
   // Determine the correct back route based on context
   // If familyIdFromParams exists, we're in SuperAdmin family context, use family-specific route

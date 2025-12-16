@@ -42,6 +42,23 @@ export function createHttpClient(apiBaseUrl: string): AxiosInstance {
           config.headers.Authorization = `Bearer ${token}`;
         }
       }
+      
+      // If FormData is being used, remove Content-Type header to let browser set it with boundary
+      if (config.data instanceof FormData) {
+        // Delete Content-Type header so browser can set it with multipart boundary
+        if (config.headers) {
+          delete (config.headers as any)['Content-Type'];
+        }
+      }
+      
+      // Debug: Log headers for PATCH requests (especially for If-Match header)
+      if (config.method?.toLowerCase() === 'patch' && config.headers) {
+        const ifMatchHeader = (config.headers as any)['If-Match'] || (config.headers as any)['if-match'];
+        if (ifMatchHeader) {
+          console.log('HTTP Client - PATCH request with If-Match header:', ifMatchHeader);
+        }
+      }
+      
       return config;
     },
     (error: AxiosError) => Promise.reject(error)

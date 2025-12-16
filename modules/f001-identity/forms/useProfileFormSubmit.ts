@@ -29,10 +29,18 @@ export function useProfileFormSubmit() {
     const freshProfileData = await refetchProfile();
     
     // Get ETag from fresh profile data or cached data
+    // React Query refetch returns { data: { data: ProfileGetResponse, etag: string } }
     const etag = freshProfileData.data?.etag || profileData?.etag;
+    
     if (!etag) {
+      console.error("useProfileFormSubmit - ETag missing:", {
+        freshProfileData: freshProfileData.data,
+        cachedProfileData: profileData,
+      });
       throw new Error("ETag is required for update operations. Please refresh the page and try again.");
     }
+    
+    console.log("useProfileFormSubmit - Using ETag for update:", etag);
     
     // Build payload - only name is updated (password change is separate)
     // ETag is sent in If-Match header, not in payload

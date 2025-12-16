@@ -120,38 +120,22 @@ export function FamilyDetailContainer() {
       return;
     }
     
-    console.log("FamilyDetailContainer - Delete confirm called", { familyId, etag: familyData?.etag });
+    // Use existing ETag from already-loaded family data (no refetch needed)
+    const etag = familyData?.etag;
+    
+    console.log("FamilyDetailContainer - Delete confirm called", { familyId, etag });
+    
+    if (!etag) {
+      console.error("FamilyDetailContainer - ETag missing for delete operation");
+      addNotification({
+        type: "error",
+        message: "ETag is required for delete operations. Please refresh the page and try again.",
+        title: "Error",
+      });
+      return;
+    }
     
     try {
-      // Refetch family data to get the latest ETag before delete
-      console.log("FamilyDetailContainer - Refetching family data to get latest ETag...");
-      const refetchResult = await refetch();
-      
-      // React Query refetch returns { data, error, ... }
-      // data structure: { data: FamilyDetailResponse, etag?: string }
-      const freshEtag = refetchResult.data?.etag;
-      const cachedEtag = familyData?.etag;
-      
-      // Use the fresh ETag from refetch, fallback to cached if refetch didn't return data
-      const etag = freshEtag || cachedEtag;
-      
-      console.log("FamilyDetailContainer - ETag values:", {
-        freshFromRefetch: freshEtag,
-        cached: cachedEtag,
-        using: etag,
-        refetchResult: refetchResult
-      });
-      
-      if (!etag) {
-        console.error("FamilyDetailContainer - ETag missing for delete operation");
-        addNotification({
-          type: "error",
-          message: "ETag is required for delete operations. Please refresh the page and try again.",
-          title: "Error",
-        });
-        return;
-      }
-      
       console.log("FamilyDetailContainer - Calling delete mutation with ETag", { familyId, etag });
       await deleteFamilyMutation.mutateAsync({ familyId, etag });
       console.log("FamilyDetailContainer - Delete mutation successful");
@@ -173,19 +157,19 @@ export function FamilyDetailContainer() {
           message: "The family was modified by another user. Please refresh the page and try again.",
           title: "Resource Modified",
         });
-        // Optionally refetch to update the UI
+        // Refetch only on ETag mismatch to update the UI with latest data
         await refetch();
       } else {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
+        const errorMessage =
+          error instanceof Error
+            ? error.message
             : error?.error?.message || error?.response?.data?.message || "Failed to delete family. Please try again.";
-      addNotification({
-        type: "error",
-        message: errorMessage,
-        title: "Delete Failed",
-      });
-    }
+        addNotification({
+          type: "error",
+          message: errorMessage,
+          title: "Delete Failed",
+        });
+      }
     }
   }, [familyId, familyData?.etag, deleteFamilyMutation, deleteModal, addNotification, router, refetch]);
 

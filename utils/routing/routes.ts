@@ -70,6 +70,19 @@ export const taxonomyRoutes = {
 };
 
 /**
+ * Document management routes
+ * F-003: Document management routes
+ */
+export const documentRoutes = {
+  list: "/documents",
+  upload: "/documents/upload",
+  detail: (documentId: string) => `/documents/${documentId}`,
+  edit: (documentId: string) => `/documents/${documentId}/edit`,
+  preview: (documentId: string) => `/documents/${documentId}/preview`,
+  notAccessible: (documentId: string) => `/documents/${documentId}/not-accessible`,
+};
+
+/**
  * Error routes
  */
 export const errorRoutes = {

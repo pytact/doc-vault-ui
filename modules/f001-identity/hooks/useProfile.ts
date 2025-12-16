@@ -12,8 +12,8 @@ import {
 import {
   ProfileGetResponse,
   ProfileUpdateResponse,
-  PasswordChangeResponse,
 } from "../types/responses/profile";
+import { useAuthContext } from "@/contexts/auth.context";
 
 /**
  * Get current user profile query hook
@@ -63,22 +63,40 @@ export function useUpdateProfile() {
 
 /**
  * Change password mutation hook
- * POST /v1/users/me/password/change
+ * PATCH /v1/users/{user_id}
+ * Uses the same update endpoint as profile update, with password fields
  * ETag is passed in the If-Match header
  */
 export function useChangePassword() {
   const queryClient = useQueryClient();
+  const { user } = useAuthContext();
 
   return useMutation({
     mutationFn: ({
       current_password,
       new_password,
       etag,
-    }: UserPasswordChangeRequest & { etag?: string }) =>
-      ProfileService.changePassword(
-        { current_password, new_password },
-        etag
-      ),
+      currentName,
+    }: UserPasswordChangeRequest & { etag?: string; currentName?: string }) => {
+      if (!user?.id) {
+        throw new Error("User ID is required. Please log in again.");
+      }
+
+      if (!currentName) {
+        throw new Error("Current name is required for password change.");
+      }
+
+      // Convert password change request to profile update request format
+      // Include current name to prevent it from being changed
+      const payload: UserProfileUpdateRequest = {
+        user_id: user.id,
+        name: currentName,
+        password: new_password,
+        current_password: current_password,
+      };
+
+      return ProfileService.update(user.id, payload, etag);
+    },
     onSuccess: () => {
       // Optionally invalidate profile to refresh any password-related metadata
       queryClient.invalidateQueries({ queryKey: ["profile"] });

@@ -52,9 +52,9 @@ export const UserDetail = React.memo(function UserDetail({
   const canManageRolesFinal = canManageRoles !== undefined ? canManageRoles : allowedRoleManagement;
 
   // Calculate if delete button should be shown
-  const isSuperAdmin = currentUserRole === "superadmin";
-  const isNotSelf = currentUserId !== user?.id;
-  const shouldShowDelete = isNotSelf && (isSuperAdmin || canSoftDelete);
+  // canSoftDelete already handles all permission checks (role, status, self-deletion)
+  // So we just need to check if it's true and user is not deleted
+  const shouldShowDelete = canSoftDelete && transformedUser?.status !== "SoftDeleted";
 
   // Debug logging
   console.log("UserDetail - Props and State:", {
@@ -65,8 +65,6 @@ export const UserDetail = React.memo(function UserDetail({
     currentUserRole,
     currentUserId,
     targetUserId: user?.id,
-    isSuperAdmin,
-    isNotSelf,
     shouldShowDelete,
     });
 

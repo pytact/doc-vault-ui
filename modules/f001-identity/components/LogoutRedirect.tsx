@@ -26,10 +26,19 @@ export function LogoutRedirect() {
     const performLogout = async () => {
       try {
         await logout();
-        router.push(authRoutes.login);
+        // Use replace to avoid adding redirect parameter, and use window.location for hard redirect
+        if (typeof window !== "undefined") {
+          window.location.href = authRoutes.login;
+        } else {
+          router.replace(authRoutes.login);
+        }
       } catch (error) {
-        // Even if logout fails, redirect to login
-        router.push(authRoutes.login);
+        // Even if logout fails, redirect to login without redirect parameter
+        if (typeof window !== "undefined") {
+          window.location.href = authRoutes.login;
+        } else {
+          router.replace(authRoutes.login);
+        }
       }
     };
 

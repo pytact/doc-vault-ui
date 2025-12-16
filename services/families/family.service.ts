@@ -9,7 +9,6 @@ import {
   FamilyCreateRequest,
   FamilyUpdateRequest,
   FamilyListParams,
-  FamilyDeleteRequest,
 } from "@/modules/f001-identity/types/requests/family";
 import {
   FamilyListResponse,
@@ -166,7 +165,7 @@ export const FamilyService = {
   /**
    * Delete family (backend handles soft-delete automatically)
    * DELETE /v1/families/{family_id}
-   * ETag is passed in the request payload
+   * ETag is passed in the If-Match header (required for concurrency control)
    */
   delete: async (
     familyId: string,
@@ -177,16 +176,14 @@ export const FamilyService = {
         throw new Error("ETag is required for delete operations");
       }
 
-      // ETag and family_id are passed in the request payload
-      const payload: FamilyDeleteRequest = {
-        family_id: familyId,
-        etag: etag,
-      };
+      // ETag in If-Match header (without quotes)
+      const headers = { "If-Match": etag };
+      const url = `${basePath}/${familyId}`;
 
-      console.log("FamilyService.delete - URL:", `${basePath}/${familyId}`, "Payload:", payload);
+      console.log("FamilyService.delete - URL:", url, "ETag:", etag, "Headers:", headers);
       const response = await http.delete<FamilySoftDeleteResponse>(
-        `${basePath}/${familyId}`,
-        { data: payload }
+        url,
+        { headers }
       );
       console.log("FamilyService.delete - Response:", response.data);
       return response.data;
