@@ -23,8 +23,10 @@ import Link from "next/link";
  * Handles business logic and displays taxonomy data
  */
 export function TaxonomyListContainer() {
-  const { data: taxonomy, isLoading, error } = useListTaxonomy();
-  const { categories, allSubcategories } = useTaxonomyData();
+  // These hooks are only called when user is authenticated (component is behind RouteGuard)
+  // Pass enabled: true to ensure data is fetched
+  const { data: taxonomy, isLoading, error } = useListTaxonomy(undefined, true);
+  const { categories, allSubcategories } = useTaxonomyData(true);
   const router = useRouter();
 
   if (isLoading) {

@@ -58,7 +58,8 @@ export function DocumentUploadFormContainer({
   ) => {
     try {
       // Create document with metadata and file in a single multipart/form-data request
-      const createResult = await submit(values, file);
+      // Pass undefined for etag (not needed for create) and file as third parameter
+      const createResult = await submit(values, undefined, file);
       
       // DocumentMutationResponse structure: { data: DocumentResponse, message: string }
       // DocumentResponse has the id field directly

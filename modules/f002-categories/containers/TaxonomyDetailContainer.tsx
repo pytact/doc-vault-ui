@@ -30,7 +30,8 @@ export function TaxonomyDetailContainer() {
   const categoryId = params?.id as string;
 
   // Use cached taxonomy data instead of making a separate API call
-  const { getCategoryById, isLoading, error } = useTaxonomyData();
+  // This component is only rendered when authenticated (behind RouteGuard)
+  const { getCategoryById, isLoading, error } = useTaxonomyData(true);
   const category = React.useMemo(() => {
     return categoryId ? getCategoryById(categoryId) : undefined;
   }, [categoryId, getCategoryById]);

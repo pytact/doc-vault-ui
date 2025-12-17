@@ -12,16 +12,25 @@ import { RouteGuard } from "@/core/guards/route-guard";
 import { UserRole } from "@/modules/f001-identity/types/responses/auth";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import Link from "next/link";
-import { userRoutes, profileRoutes, documentRoutes } from "@/utils/routing";
+import { userRoutes, profileRoutes, documentRoutes, notificationRoutes } from "@/utils/routing";
 import { useUserList } from "@/modules/f001-identity/hooks/useUsers";
 import { useFamilyContext } from "@/contexts/family.context";
 import { useListDocuments } from "@/modules/f003-documents/hooks/useDocuments";
+import { DashboardExpiryWidgetContainer } from "@/modules/f005-notifications/containers/DashboardExpiryWidgetContainer";
+import { useListNotifications } from "@/modules/f005-notifications/hooks/useNotifications";
+import { useNotificationListTransform } from "@/modules/f005-notifications/hooks/useNotificationListTransform";
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
   const { familyId } = useFamilyContext();
   const { data: usersData, isLoading: usersLoading } = useUserList(familyId || null);
   const { data: documentsData, isLoading: documentsLoading } = useListDocuments();
+  
+  // Fetch notifications for summary (using default pagination)
+  const { data: notificationsData } = useListNotifications();
+  const { unreadCount } = useNotificationListTransform({
+    notifications: notificationsData?.data?.items,
+  });
 
   // Calculate statistics for FamilyAdmin
   const totalUsers = usersData?.data?.total || 0;
@@ -102,6 +111,20 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 View Documents
+              </Link>
+              <Link
+                href={notificationRoutes.list}
+                className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                View Notifications
+                {unreadCount > 0 && (
+                  <span className="ml-auto rounded-full bg-danger-500 px-2 py-0.5 text-xs font-semibold text-white">
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
             </CardBody>
           </Card>
@@ -239,6 +262,55 @@ export default function DashboardPage() {
                 <p className="text-sm font-medium text-slate-600">Email</p>
                 <p className="mt-1 text-sm text-slate-900">{user?.email}</p>
               </div>
+            </CardBody>
+          </Card>
+        </div>
+
+        {/* Notifications Section */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Upcoming Expiries Widget */}
+          <DashboardExpiryWidgetContainer />
+
+          {/* Notifications Summary */}
+          <Card variant="elevated" className="border-l-4 border-l-primary-500">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-primary-100 p-2">
+                    <svg
+                      className="h-6 w-6 text-primary-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                      />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-semibold text-slate-900">Notifications</h2>
+                </div>
+              </div>
+            </CardHeader>
+            <CardBody className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-slate-600">Unread Notifications</p>
+                <p className="mt-1 text-lg font-semibold text-primary-600">
+                  {unreadCount > 0 ? unreadCount : "None"}
+                </p>
+              </div>
+              <Link
+                href={notificationRoutes.list}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                View All Notifications
+              </Link>
             </CardBody>
           </Card>
         </div>

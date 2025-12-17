@@ -85,6 +85,17 @@ export const documentRoutes = {
 };
 
 /**
+ * Notification routes
+ * F-005: Expiry Notification System routes
+ * Access: Owner (Member) and FamilyAdmin only
+ */
+export const notificationRoutes = {
+  list: "/notifications",
+  detail: (notificationId: string) => `/notifications/${notificationId}`,
+  // Note: Notifications are auto-generated, so no create/edit routes
+};
+
+/**
  * Error routes
  */
 export const errorRoutes = {

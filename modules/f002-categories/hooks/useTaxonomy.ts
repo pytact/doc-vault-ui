@@ -26,9 +26,10 @@ import {
  * Uses Infinity staleTime since taxonomy is immutable and never changes.
  * 
  * @param params - Optional list parameters (currently not used by API)
+ * @param enabled - Whether the query should run (defaults to false to prevent unauthorized calls)
  * @returns React Query result with taxonomy data
  */
-export function useListTaxonomy(params?: TaxonomyListParams) {
+export function useListTaxonomy(params?: TaxonomyListParams, enabled: boolean = false) {
   return useQuery({
     queryKey: ["taxonomy", "list", params],
     queryFn: () => TaxonomyService.list(params),
@@ -36,8 +37,8 @@ export function useListTaxonomy(params?: TaxonomyListParams) {
     gcTime: Infinity, // Keep in cache indefinitely since data never changes
     refetchOnWindowFocus: false, // No need to refetch immutable data
     placeholderData: keepPreviousData, // Keep previous data while refetching (if ever needed)
-    // Fetch eagerly when component mounts (no need to wait for user interaction)
-    enabled: true,
+    // Only fetch when explicitly enabled (e.g., when user is authenticated)
+    enabled: enabled,
   });
 }
 

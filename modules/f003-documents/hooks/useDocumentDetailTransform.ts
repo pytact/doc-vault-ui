@@ -186,11 +186,6 @@ export function useDocumentDetailTransform(
     const isFamilyAdmin = currentUserRole === "familyadmin";
     
     return hasOwnerPermission || hasEditorPermission || isFamilyAdmin;
-      isFamilyAdmin,
-      canDelete: canDeleteResult,
-    });
-    
-    return canDeleteResult;
   }, [document, currentUserRole]);
 
   const canPreview = useMemo(() => {

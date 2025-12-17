@@ -73,10 +73,11 @@ interface UseTaxonomyDataReturn {
  * - Flattens subcategories with category context for search
  * - Creates lookup maps for efficient access
  * 
+ * @param enabled - Whether the query should run (defaults to false to prevent unauthorized calls)
  * @returns Transformed taxonomy data and helper functions
  */
-export function useTaxonomyData(): UseTaxonomyDataReturn {
-  const { data: taxonomy, isLoading, error } = useListTaxonomy();
+export function useTaxonomyData(enabled: boolean = false): UseTaxonomyDataReturn {
+  const { data: taxonomy, isLoading, error } = useListTaxonomy(undefined, enabled);
 
   // Extract categories array
   const categories = useMemo(() => {

@@ -10,7 +10,10 @@
 "use client";
 
 import React, { createContext, useContext } from "react";
+import { usePathname } from "next/navigation";
 import { useTaxonomyData, type CategoryOption, type SubcategoryOption } from "@/modules/f002-categories/hooks/useTaxonomyData";
+import { useAuthContext } from "@/contexts/auth.context";
+import { documentRoutes } from "@/utils/routing";
 
 interface TaxonomyContextValue {
   // Raw data
@@ -48,13 +51,23 @@ interface TaxonomyProviderProps {
  * Taxonomy data is cached via React Query with Infinity staleTime,
  * so this context simply exposes the data globally without additional caching.
  * 
- * IMPORTANT: This provider fetches taxonomy data eagerly when mounted,
- * ensuring it's available immediately when document forms are loaded.
+ * IMPORTANT: This provider only fetches taxonomy data when:
+ * 1. User is authenticated
+ * 2. User is on a Documents-related route
+ * This prevents unauthorized API calls when the user is not logged in or not on Documents section.
  */
 export function TaxonomyProvider({ children }: TaxonomyProviderProps) {
-  // This hook will automatically fetch taxonomy data when the provider mounts
-  // Since it's in the root Providers component, taxonomy will be loaded on app startup
-  const taxonomyData = useTaxonomyData();
+  // Check authentication status and current route
+  const { isAuthenticated } = useAuthContext();
+  const pathname = usePathname();
+  
+  // Check if we're on a Documents route
+  const isOnDocumentsRoute = pathname?.startsWith(documentRoutes.list) ?? false;
+  
+  // Only enable taxonomy fetch when user is authenticated AND on Documents route
+  // This prevents the API call from being made when user is not logged in or not on Documents section
+  const shouldFetchTaxonomy = isAuthenticated && isOnDocumentsRoute;
+  const taxonomyData = useTaxonomyData(shouldFetchTaxonomy);
 
   const value: TaxonomyContextValue = {
     taxonomy: taxonomyData.taxonomy,

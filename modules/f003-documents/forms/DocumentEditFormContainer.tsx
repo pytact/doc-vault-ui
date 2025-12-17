@@ -123,15 +123,20 @@ export function DocumentEditFormContainer({
         try {
           // Get the new ETag from the update response (no need to refetch - avoid extra GET call)
           // The update response headers contain the new ETag after the document was modified
-          const updatedEtag = (updateResult as any)?.etag;
+          let updatedEtag = (updateResult as any)?.etag;
+          
+          // Fallback: if ETag not in response, refetch document to get new ETag
+          if (!updatedEtag) {
+            const refreshedDocument = await refetchDocument();
+            updatedEtag = refreshedDocument.data?.etag;
+          }
           
           if (!updatedEtag) {
-            // If ETag not in response, throw error (shouldn't happen normally)
-            // User can refresh the page and try again
+            // If ETag still not available, throw error
             throw new Error("ETag is required for file replacement. Please refresh the page and try again.");
           }
           
-          // Use ETag from update response headers (no GET call needed)
+          // Use ETag from update response or refetched document
           await DocumentService.replaceFile(documentId, file, updatedEtag);
         } catch (fileError: unknown) {
           // If file replacement fails, metadata was still updated
