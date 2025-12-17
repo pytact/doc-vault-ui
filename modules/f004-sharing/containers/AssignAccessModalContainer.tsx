@@ -15,6 +15,7 @@ import { useUserList } from "@/modules/f001-identity/hooks/useUsers";
 import { useFamilyContext } from "@/contexts/family.context";
 import { useAuthContext } from "@/contexts/auth.context";
 import { useDocumentAssignmentSelection } from "../hooks/useDocumentAssignmentSelection";
+import { UserRole } from "@/modules/f001-identity/types/responses/auth";
 import type { UserSummary } from "../types/responses/document-assignment";
 
 interface AssignAccessModalContainerProps {
@@ -42,9 +43,12 @@ export function AssignAccessModalContainer({
   const { data: documentData } = useGetDocument(documentId);
   const documentOwnerId = documentData?.data?.data?.owner_user_id || null;
 
-  // Get family members
+  // Only FamilyAdmin and SuperAdmin can list users - Members should not call this API
+  const canListUsers = user?.role === UserRole.FamilyAdmin || user?.role === UserRole.SuperAdmin;
+  
+  // Get family members (only if user has permission)
   const { data: usersData, isLoading: isLoadingUsers, error: usersError } = useUserList(
-    familyId || null
+    canListUsers ? (familyId || null) : null
   );
 
   // Get existing assignments to filter out already-assigned users

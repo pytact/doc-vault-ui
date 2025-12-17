@@ -19,11 +19,17 @@ import { useListDocuments } from "@/modules/f003-documents/hooks/useDocuments";
 import { DashboardExpiryWidgetContainer } from "@/modules/f005-notifications/containers/DashboardExpiryWidgetContainer";
 import { useListNotifications } from "@/modules/f005-notifications/hooks/useNotifications";
 import { useNotificationListTransform } from "@/modules/f005-notifications/hooks/useNotificationListTransform";
+import { RecentDocumentsWidgetContainer } from "@/modules/f003-documents/containers/RecentDocumentsWidgetContainer";
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
   const { familyId } = useFamilyContext();
-  const { data: usersData, isLoading: usersLoading } = useUserList(familyId || null);
+  
+  // Only FamilyAdmin and SuperAdmin can list users - Members should not call this API
+  const canListUsers = user?.role === UserRole.FamilyAdmin || user?.role === UserRole.SuperAdmin;
+  const { data: usersData, isLoading: usersLoading } = useUserList(
+    canListUsers ? (familyId || null) : null
+  );
   const { data: documentsData, isLoading: documentsLoading } = useListDocuments();
   
   // Fetch notifications for summary (using default pagination)
@@ -48,7 +54,7 @@ export default function DashboardPage() {
   ).length;
 
   return (
-    <RouteGuard roles={[UserRole.FamilyAdmin, UserRole.Member]}>
+    <RouteGuard roles={[UserRole.FamilyAdmin, UserRole.Member, UserRole.SuperAdmin]}>
       <div className="space-y-8">
         {/* Welcome Section */}
         <div className="rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 p-8 text-white shadow-lg">
@@ -103,15 +109,17 @@ export default function DashboardPage() {
                   View All Users
                 </Link>
               )}
-              <Link
-                href={documentRoutes.list}
-                className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                View Documents
-              </Link>
+              {user?.role !== UserRole.SuperAdmin && (
+                <Link
+                  href={documentRoutes.list}
+                  className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  View Documents
+                </Link>
+              )}
               <Link
                 href={notificationRoutes.list}
                 className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50"
@@ -129,56 +137,58 @@ export default function DashboardPage() {
             </CardBody>
           </Card>
 
-          {/* Documents Section */}
-          <Card variant="elevated" className="border-l-4 border-l-primary-500">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-primary-100 p-2">
-                  <svg
-                    className="h-6 w-6 text-primary-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
+          {/* Documents Section - Hidden for SuperAdmin */}
+          {user?.role !== UserRole.SuperAdmin && (
+            <Card variant="elevated" className="border-l-4 border-l-primary-500">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-primary-100 p-2">
+                    <svg
+                      className="h-6 w-6 text-primary-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-semibold text-slate-900">Documents</h2>
                 </div>
-                <h2 className="text-xl font-semibold text-slate-900">Documents</h2>
-              </div>
-            </CardHeader>
-            <CardBody className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-slate-600">Total Documents</p>
-                {documentsLoading ? (
-                  <p className="mt-1 text-lg font-semibold text-primary-600">Loading...</p>
-                ) : (
-                  <p className="mt-1 text-lg font-semibold text-primary-600">{totalDocuments}</p>
-                )}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">With Files</p>
-                {documentsLoading ? (
-                  <p className="mt-1 text-sm text-slate-500">Loading...</p>
-                ) : (
-                  <p className="mt-1 text-sm text-slate-500">{documentsWithFiles} documents have PDF files</p>
-                )}
-              </div>
-              <Link
-                href={documentRoutes.list}
-                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Manage Documents
-              </Link>
-            </CardBody>
-          </Card>
+              </CardHeader>
+              <CardBody className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Total Documents</p>
+                  {documentsLoading ? (
+                    <p className="mt-1 text-lg font-semibold text-primary-600">Loading...</p>
+                  ) : (
+                    <p className="mt-1 text-lg font-semibold text-primary-600">{totalDocuments}</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">With Files</p>
+                  {documentsLoading ? (
+                    <p className="mt-1 text-sm text-slate-500">Loading...</p>
+                  ) : (
+                    <p className="mt-1 text-sm text-slate-500">{documentsWithFiles} documents have PDF files</p>
+                  )}
+                </div>
+                <Link
+                  href={documentRoutes.list}
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Manage Documents
+                </Link>
+              </CardBody>
+            </Card>
+          )}
 
           {/* Family Info */}
           {user?.family_name && (
@@ -266,10 +276,13 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Notifications Section */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Upcoming Expiries Widget */}
-          <DashboardExpiryWidgetContainer />
+        {/* Documents and Notifications Section */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Recent Documents Widget - Hidden for SuperAdmin */}
+          {user?.role !== UserRole.SuperAdmin && <RecentDocumentsWidgetContainer />}
+
+          {/* Upcoming Expiries Widget - Hidden for SuperAdmin */}
+          {user?.role !== UserRole.SuperAdmin && <DashboardExpiryWidgetContainer />}
 
           {/* Notifications Summary */}
           <Card variant="elevated" className="border-l-4 border-l-primary-500">

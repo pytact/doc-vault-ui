@@ -74,7 +74,11 @@ export function InviteUserFormContainer({
     }
   };
 
-  const availableRoles = rolesData?.data?.items || [];
+  // Filter out SuperAdmin role - FamilyAdmin can only invite FamilyAdmin and Member
+  const availableRoles = React.useMemo(() => {
+    const allRoles = rolesData?.data?.items || [];
+    return allRoles.filter((role) => role.name !== "superadmin");
+  }, [rolesData?.data?.items]);
 
   return (
     <InviteUserForm

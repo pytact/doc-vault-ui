@@ -49,6 +49,8 @@ export const DocumentUploadForm = React.memo(function DocumentUploadForm({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [detailsJsonText, setDetailsJsonText] = useState<string>("");
+  const [isDragging, setIsDragging] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const selectedCategoryId = form.watch("category_id");
   const selectedSubcategoryId = form.watch("subcategory_id");
@@ -70,35 +72,88 @@ export const DocumentUploadForm = React.memo(function DocumentUploadForm({
     }
   }, [selectedCategoryId, form]);
 
+  // Validate and set file
+  const validateAndSetFile = useCallback((file: File | null) => {
+    setFileError(null);
+    setPreviewUrl(null);
+
+    if (!file) {
+      setSelectedFile(null);
+      return;
+    }
+
+    // Validate file type
+    if (file.type !== "application/pdf") {
+      setFileError("File must be a PDF");
+      setSelectedFile(null);
+      return;
+    }
+
+    // Validate file size (5 MB = 5 * 1024 * 1024 bytes)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setFileError("File size must be 5 MB or less");
+      setSelectedFile(null);
+      return;
+    }
+
+    setSelectedFile(file);
+    
+    // Create preview URL
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+  }, []);
+
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      setFileError(null);
-
-      if (!file) {
-        setSelectedFile(null);
-        return;
-      }
-
-      // Validate file type
-      if (file.type !== "application/pdf") {
-        setFileError("File must be a PDF");
-        setSelectedFile(null);
-        return;
-      }
-
-      // Validate file size (5 MB = 5 * 1024 * 1024 bytes)
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        setFileError("File size must be 5 MB or less");
-        setSelectedFile(null);
-        return;
-      }
-
-      setSelectedFile(file);
+      validateAndSetFile(file || null);
     },
-    []
+    [validateAndSetFile]
   );
+
+  // Drag and drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+
+      if (isLoading) return;
+
+      const file = e.dataTransfer.files?.[0];
+      if (file) {
+        validateAndSetFile(file);
+      }
+    },
+    [isLoading, validateAndSetFile]
+  );
+
+  // Cleanup preview URL on unmount
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleDetailsJsonChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -157,22 +212,98 @@ export const DocumentUploadForm = React.memo(function DocumentUploadForm({
       <CardBody>
         <Form form={form}>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* File Input Section */}
+            {/* File Input Section with Drag & Drop */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
                 PDF File (Required)
               </label>
               <div className="space-y-2">
-                <input
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  onChange={handleFileChange}
-                  disabled={isLoading}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                />
+                {/* Drag & Drop Zone */}
+                <div
+                  onDragEnter={handleDragEnter}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={cn(
+                    "border-2 border-dashed rounded-lg p-8 text-center transition-colors",
+                    isDragging
+                      ? "border-primary-500 bg-primary-50"
+                      : "border-gray-300 bg-gray-50 hover:border-primary-400 hover:bg-primary-50/50",
+                    isLoading && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <div className="flex flex-col items-center gap-4">
+                    <svg
+                      className="h-12 w-12 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                      />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        {isDragging
+                          ? "Drop your PDF file here"
+                          : "Drag and drop your PDF file here, or click to browse"}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        PDF files only, max 5 MB
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={handleFileChange}
+                      disabled={isLoading}
+                      className="hidden"
+                      id="file-upload-input"
+                    />
+                    <label htmlFor="file-upload-input">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isLoading}
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          document.getElementById("file-upload-input")?.click();
+                        }}
+                      >
+                        Browse Files
+                      </Button>
+                    </label>
+                  </div>
+                </div>
+
+                {/* File Info and Preview */}
                 {selectedFile && (
-                  <FileInfoDisplay fileName={selectedFile.name} fileSize={selectedFile.size} />
+                  <div className="space-y-3">
+                    <FileInfoDisplay fileName={selectedFile.name} fileSize={selectedFile.size} />
+                    
+                    {/* PDF Preview */}
+                    {previewUrl && (
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="bg-gray-100 px-4 py-2 border-b border-gray-200">
+                          <p className="text-sm font-medium text-gray-700">Preview</p>
+                        </div>
+                        <div className="bg-gray-50" style={{ height: "500px", overflow: "auto" }}>
+                          <iframe
+                            src={previewUrl}
+                            className="w-full h-full border-0"
+                            title={`Preview: ${selectedFile.name}`}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
+
                 {fileError && (
                   <p className="text-sm text-danger-600" role="alert">
                     {fileError}
