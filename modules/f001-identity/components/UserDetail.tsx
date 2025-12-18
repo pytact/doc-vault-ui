@@ -56,11 +56,7 @@ export const UserDetail = React.memo(function UserDetail({
   // So we just need to check if it's true and user is not deleted
   const shouldShowDelete = canSoftDelete && transformedUser?.status !== "SoftDeleted";
 
-    currentUserRole,
-    currentUserId,
-    targetUserId: user?.id,
-    shouldShowDelete,
-    });
+
 
   const getStatusBadge = React.useCallback(
     (status: string) => {

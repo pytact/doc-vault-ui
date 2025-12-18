@@ -54,7 +54,31 @@ export const profileRoutes = {
  */
 export const dashboardRoutes = {
   home: "/dashboard",
-  superAdmin: "/superadmin/dashboard",
+  superAdmin: "/superadmin",
+};
+
+/**
+ * SuperAdmin Console routes
+ * F-007: SuperAdmin Console routes
+ * All routes require SuperAdmin role
+ */
+export const superAdminRoutes = {
+  dashboard: "/superadmin",
+  families: {
+    list: "/superadmin/families",
+    create: "/superadmin/families/create",
+    detail: (familyId: string) => `/superadmin/families/${familyId}`,
+    edit: (familyId: string) => `/superadmin/families/${familyId}/edit`,
+  },
+  users: {
+    list: "/superadmin/users",
+    detail: (userId: string) => `/superadmin/users/${userId}`,
+  },
+  deleted: {
+    users: "/superadmin/deleted/users",
+    families: "/superadmin/deleted/families",
+  },
+  analytics: "/superadmin/analytics",
 };
 
 /**

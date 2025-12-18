@@ -9,7 +9,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useLogin, useLogout } from "@/modules/f001-identity/hooks/useAuth";
 import { useProfile } from "@/modules/f001-identity/hooks/useProfile";
-import { LoginUserInfo, AuthLoginResponse } from "@/modules/f001-identity/types/responses/auth";
+import { LoginUserInfo, AuthLoginResponse, UserRole } from "@/modules/f001-identity/types/responses/auth";
 import { sessionStorageKeys } from "@/utils/constants/common";
 
 interface AuthContextValue {
@@ -19,6 +19,11 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<AuthLoginResponse>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  // Role helper methods
+  isSuperAdmin: boolean;
+  isFamilyAdmin: boolean;
+  isMember: boolean;
+  hasRole: (role: UserRole) => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -160,6 +165,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await refetchProfile();
   }, [refetchProfile]);
 
+  // Role helper methods
+  const isSuperAdmin = user?.role === UserRole.SuperAdmin;
+  const isFamilyAdmin = user?.role === UserRole.FamilyAdmin;
+  const isMember = user?.role === UserRole.Member;
+  const hasRole = useCallback((role: UserRole): boolean => {
+    return user?.role === role;
+  }, [user?.role]);
+
   const value: AuthContextValue = {
     user,
     isAuthenticated: !!user,
@@ -167,6 +180,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     logout,
     refreshUser,
+    isSuperAdmin,
+    isFamilyAdmin,
+    isMember,
+    hasRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
